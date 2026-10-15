@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目文件说明 · 广告素材合规审核系统</title>
+<style>
+  :root { --ink:#1f2329; --mut:#6b7280; --line:#e5e7eb; --bg:#f6f7f9; --card:#ffffff;
+          --blue:#185FA5; --teal:#0F6E56; --red:#A32D2D; --amber:#854F0B; --purple:#5B4A9E; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Microsoft YaHei", "PingFang SC", "Microsoft Sans Serif", sans-serif;
+         color: var(--ink); background: var(--bg); line-height: 1.7; font-size: 14px; padding: 2rem 1rem; }
+  .wrap { max-width: 1000px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: .25rem; }
+  .sub { color: var(--mut); font-size: 13px; margin-bottom: 1.75rem; }
+  h2 { font-size: 16px; font-weight: 600; margin: 2rem 0 .75rem; padding-left: .6rem;
+       border-left: 4px solid var(--blue); }
+  h3 { font-size: 14px; font-weight: 600; margin: 1.25rem 0 .5rem; color: var(--blue); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+          padding: 1.1rem 1.25rem; margin-bottom: 1rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: .45rem .6rem; border-bottom: 1px solid var(--line);
+           text-align: left; vertical-align: top; }
+  th { color: var(--mut); font-weight: 500; background: var(--bg); }
+  tr:last-child td { border-bottom: none; }
+  code { background: #eef1f5; padding: .08rem .32rem; border-radius: 4px;
+         font-family: Consolas, "Courier New", monospace; font-size: 12.5px; }
+  pre { background: #1f2329; color: #d8dee9; padding: .85rem 1rem; border-radius: 8px;
+        font-family: Consolas, "Courier New", monospace; font-size: 12.5px;
+        overflow-x: auto; line-height: 1.6; margin: .5rem 0; }
+  .file { font-family: Consolas, "Courier New", monospace; font-size: 12.5px; white-space: nowrap; }
+  .good { color: var(--teal); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .warn { color: var(--amber); font-weight: 600; }
+  .tag { display: inline-block; font-size: 11px; padding: .05rem .45rem; border-radius: 4px;
+         border: 1px solid var(--line); color: var(--mut); background: var(--bg); margin-left: .3rem; }
+  .tag-new { color: var(--teal); border-color: #b8ddd0; background: #eaf6f1; }
+  .tag-mid { color: var(--amber); border-color: #e5d4a8; background: #fdf6e6; }
+  .tag-tmp { color: var(--mut); }
+  ul, ol { margin: .4rem 0 .4rem 1.2rem; }
+  li { margin-bottom: .25rem; }
+  .note { border-left: 3px solid var(--amber); background: #fdf9ef; padding: .6rem .9rem;
+          border-radius: 0 8px 8px 0; margin: .6rem 0; font-size: 13px; }
+  .danger { border-left: 3px solid var(--red); background: #fdf0f0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: .75rem 0; }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: .8rem .95rem; }
+  .box .k { font-size: 12px; color: var(--mut); margin-bottom: .15rem; }
+  .box .v { font-size: 15px; font-weight: 600; }
+  @media print {
+    body { background: #fff; padding: 0; font-size: 11.5px; }
+    .wrap { max-width: 100%; }
+    h2 { break-after: avoid; page-break-after: avoid; }
+    table, .card, pre, .box { break-inside: avoid; page-break-inside: avoid; }
+    .card { border-color: #ccc; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>项目文件说明</h1>
+<div class="sub">广告素材合规审核系统 ｜ 目录：<code>D:\pythondm\深度学习\code</code> ｜ 更新：2026-10-15</div>
+
+<!-- ========== 0. 定位 ========== -->
+<h2>零、这个项目在做什么</h2>
+<div class="card">
+<p>一句话：<b>输入一段广告文案，输出它属于哪一类违规（或不违规）</b>，并在模型没把握时转人工复核。</p>
+<p style="margin-top:.5rem">技术上它是一条完整的<b>文本分类流水线</b>，同一份数据喂给四套方案横向对比，再叠加模型压缩（量化 / 蒸馏 / 剪枝），最后通过 Flask 服务 + Streamlit 页面交付。</p>
+
+<div class="grid">
+  <div class="box"><div class="k">数据来源</div><div class="v">ChineseHarm-bench</div></div>
+  <div class="box"><div class="k">样本量</div><div class="v">9,503 条（去重后）</div></div>
+  <div class="box"><div class="k">类别数</div><div class="v">6 类</div></div>
+  <div class="box"><div class="k">最佳方案</div><div class="v">BERT 微调 F1 0.934</div></div>
+</div>
+
+<h3>六类标签</h3>
+<table>
+  <tr><th style="width:70px">ID</th><th style="width:120px">类别</th><th>含义</th></tr>
+  <tr><td class="num">0</td><td>不违规</td><td>正常内容，唯一不需要拦截的类别</td></tr>
+  <tr><td class="num">1</td><td>黑产广告</td><td>黑灰产引流、违规推广</td></tr>
+  <tr><td class="num">2</td><td>欺诈</td><td>诈骗话术、虚假诱导</td></tr>
+  <tr><td class="num">3</td><td>博彩</td><td>赌博引流、赌盘推广</td></tr>
+  <tr><td class="num">4</td><td>谩骂引战</td><td>辱骂、挑拨对立</td></tr>
+  <tr><td class="num">5</td><td>低俗色情</td><td>色情低俗、擦边内容</td></tr>
+</table>
+</div>
+
+<!-- ========== 1. 目录总览 ========== -->
+<h2>一、目录总览</h2>
+<div class="card">
+<table>
+  <tr><th style="width:110px">目录</th><th style="width:110px">角色</th><th>作用</th><th style="width:60px">文件数</th></tr>
+  <tr><td class="file">01-data</td><td>数据层</td><td>存放全部数据集、词典、预训练模型、训练产物</td><td class="num">20+</td></tr>
+  <tr><td class="file">02-rf</td><td>基线方案 A</td><td>TF-IDF + 随机森林</td><td class="num">8</td></tr>
+  <tr><td class="file">03-fasttext</td><td>基线方案 B</td><td>fastText 字级 / 词级四种配置</td><td class="num">9</td></tr>
+  <tr><td class="file">04_Bett</td><td class="good">主线方案</td><td>BERT 微调 + 量化 + 蒸馏 + 剪枝，含实验报告</td><td class="num">13</td></tr>
+  <tr><td class="file">05-LLM</td><td>对照方案</td><td>DeepSeek 大模型提示词分类</td><td class="num">6</td></tr>
+  <tr><td class="file">00-test / test</td><td class="warn">无关</td><td>Flask 入门练习，与本项目无关，<code>test</code> 是 <code>00-test</code> 的旧副本</td><td class="num">7</td></tr>
+</table>
+</div>
+
+<!-- ========== 2. 数据契约 ========== -->
+<h2>二、理解全部代码的关键：数据契约</h2>
+<div class="card">
+<p>四套方案能共用同一份原始数据，靠的是两条极简约定。理解了它们，其余代码基本是复制粘贴。</p>
+
+<h3>契约一：数据文件格式</h3>
+<pre>01-data/train.txt      每行：文本 \t 标签索引
+01-data/dev.txt        例：加薇xxx看片\t5
+01-data/test.txt
+01-data/class.txt      第 i 行 = 标签 ID 为 i 的类别名（行号即 ID）</pre>
+
+<h3>契约二：推理函数签名</h3>
+<pre>predict_fun(data: dict) -> data    # data['text'] 进，data['pred_class'] 出</pre>
+<p>四套方案的 <code>predict_fun</code> 签名完全一致，所以 Flask 服务只需改一行 <code>import</code> 就能换模型。</p>
+
+<h3>各方案派生的数据文件</h3>
+<table>
+  <tr><th style="width:150px">文件</th><th style="width:100px">给谁用</th><th style="width:150px">由谁生成</th><th>格式</th></tr>
+  <tr><td class="file">train/dev/test.txt</td><td>BERT / RF</td><td class="file">prepare_adaudit_data.py</td><td class="file">文本\t标签索引</td></tr>
+  <tr><td class="file">char_train/dev/test.txt</td><td>fastText 字级</td><td class="file">03-fasttext/data_process.py</td><td class="file">__label__不违规 广 告 ...</td></tr>
+  <tr><td class="file">word_train/dev/test.txt</td><td>fastText 词级</td><td class="file">03-fasttext/data_process.py</td><td class="file">__label__不违规 广告 投放 ...</td></tr>
+  <tr><td class="file">process_train.csv</td><td>随机森林</td><td class="file">02-rf/data_process.py</td><td class="file">words,label（jieba 分词后空格连接）</td></tr>
+</table>
+</div>
+
+<!-- ========== 3. 01-data ========== -->
+<h2>三、01-data ｜ 数据层</h2>
+<div class="card">
+<h3>代码脚本</h3>
+<table>
+  <tr><th style="width:180px">文件</th><th>功能</th></tr>
+  <tr><td class="file">prepare_adaudit_data.py <span class="tag tag-new">本次新增</span></td>
+      <td><b>数据准备总脚本</b>：读取 <code>_raw/chineseharm/</code> 下 7 个 json → 去重 → 分层抽样 → 写出 train/dev/test.txt + class.txt。<b>换数据集时唯一需要重写的脚本</b></td></tr>
+  <tr><td class="file">data_eda.py</td>
+      <td>探索性数据分析：统计标签分布、句子长度分布并绘图。换数据后可直接跑</td></tr>
+  <tr><td class="file">config.py</td>
+      <td>数据层路径配置。<span class="warn">注意：它还指向已备份的 <code>train_raw.txt</code> 等旧新闻文件，属历史遗留</span>，实际训练路径由各方案自己的 config 决定</td></tr>
+</table>
+
+<h3>数据文件</h3>
+<table>
+  <tr><th style="width:180px">文件</th><th style="width:80px">规模</th><th>说明</th></tr>
+  <tr><td class="file">train.txt</td><td class="num">7,600</td><td>训练集</td></tr>
+  <tr><td class="file">dev.txt</td><td class="num">947</td><td>验证集（用于选最优轮次）</td></tr>
+  <tr><td class="file">test.txt</td><td class="num">956</td><td>测试集（所有报告数字都来自这里）</td></tr>
+  <tr><td class="file">class.txt</td><td class="num">6 行</td><td>类别名，行号即标签 ID</td></tr>
+  <tr><td class="file">char_*.txt / word_*.txt</td><td class="num">各 3</td><td>fastText 用，由脚本生成，勿手改</td></tr>
+  <tr><td class="file">process_train.csv</td><td class="num">—</td><td>随机森林用，由脚本生成</td></tr>
+  <tr><td class="file">stopwords.txt</td><td class="num">—</td><td>中文停用词表，jieba 分词时使用</td></tr>
+</table>
+
+<h3>模型产物：<span class="file">save_model/</span></h3>
+<table>
+  <tr><th style="width:230px">文件</th><th>说明</th></tr>
+  <tr><td class="file">bert_model.pth <span class="tag tag-new">当前使用</span></td><td>BERT 微调 + 类别加权模型，accuracy 0.9310 / macro-F1 0.9343。<b>默认加载的推理模型</b></td></tr>
+  <tr><td class="file">bert_model_baseline.pth</td><td>加权前的基线模型（F1 0.930），用于回滚对比</td></tr>
+  <tr><td class="file">bert_student_model.pth</td><td>蒸馏后的 4 层 Student，F1 0.9230，推理快 3.08x</td></tr>
+  <tr><td class="file">bert_student_a05_e3.pth</td><td>蒸馏第一版（alpha=0.5 / 3 轮），效果较差，仅存档</td></tr>
+  <tr><td class="file">bert_pruned_model.pth</td><td>50% 稀疏度剪枝模型，F1 0.9305</td></tr>
+  <tr><td class="file">bert_quantization_model.bin</td><td>动态量化 int8 模型，F1 0.9146，体积 145MB</td></tr>
+  <tr><td class="file">bert_quuantizaiton_model.bin <span class="tag tag-tmp">过期</span></td>
+      <td class="bad">旧拼写 + 旧 10 类新闻模型（10-13 生成），已废弃，建议删除</td></tr>
+</table>
+
+<h3>其他目录</h3>
+<table>
+  <tr><th style="width:200px">目录</th><th>说明</th></tr>
+  <tr><td class="file">bert-base-chinese/</td><td>预训练权重与词表（102M 参数，12 层）。离线可用，蒸馏时用它初始化 Student</td></tr>
+  <tr><td class="file">_raw/chineseharm/</td><td>从 HuggingFace 下载的 7 个原始 json（bench + 6 个类别文件，约 1.55w 条）</td></tr>
+  <tr><td class="file">_backup_news/</td><td>原 THUCNews 新闻分类的 16 个数据文件备份（改造时挪走，未删除）</td></tr>
+</table>
+</div>
+
+<!-- ========== 4. 02-rf ========== -->
+<h2>四、02-rf ｜ 方案 A：TF-IDF + 随机森林</h2>
+<div class="card">
+<p class="sub" style="margin-bottom:.5rem">成绩：accuracy 0.78 / macro-F1 0.78 —— 作为传统机器学习基线，用来衬托 BERT 的价值</p>
+<table>
+  <tr><th style="width:180px">文件</th><th>功能</th></tr>
+  <tr><td class="file">config.py</td><td>路径、超参、API 端口（6000）</td></tr>
+  <tr><td class="file">data_process.py</td><td>读 txt → jieba 分词 → 去停用词 → 写出 <code>process_train.csv</code></td></tr>
+  <tr><td class="file">rf_train.py</td><td>TF-IDF 向量化 + 随机森林训练，保存 <code>rf_model.pkl</code> 与 <code>tfidf_model.pkl</code>。<span class="tag tag-mid">已修</span>删除了 IDE 误插入的 <code>from pygments.lexer import words</code></td></tr>
+  <tr><td class="file">rf_predic_fun.py</td><td>推理函数 <code>predict_fun(data)</code>，符合统一推理契约</td></tr>
+  <tr><td class="file">rf_test.py</td><td>在验证集上评估：准确率 / 精确率 / 召回率 / F1 / 混淆矩阵</td></tr>
+  <tr><td class="file">api_flask_server.py</td><td>Flask 服务，<code>POST /predict</code>，端口 6000</td></tr>
+  <tr><td class="file">api_test.py</td><td>命令行交互测试：手动输入文本 → 调用接口 → 打印结果</td></tr>
+  <tr><td class="file">streamlit_app.py</td><td>前端页面，已改为广告审核文案</td></tr>
+  <tr><td class="file">dp.log / rf_train.log <span class="tag tag-tmp">日志</span></td><td>运行日志，可随时删除</td></tr>
+</table>
+</div>
+
+<!-- ========== 5. 03-fasttext ========== -->
+<h2>五、03-fasttext ｜ 方案 B：fastText 四种配置</h2>
+<div class="card">
+<p class="sub" style="margin-bottom:.5rem">字级 vs 词级 × 默认参数 vs 自动调参，四种组合对比</p>
+<table>
+  <tr><th style="width:200px">文件</th><th style="width:80px">测试集 F1</th><th>功能</th></tr>
+  <tr><td class="file">fasttext_char_default.py</td><td class="good num">0.9079</td><td>字级切分，默认超参（dim=32, wordNgrams=2）</td></tr>
+  <tr><td class="file">fasttext_word_1_default.py</td><td class="num">0.8724</td><td>词级切分（jieba），默认超参</td></tr>
+  <tr><td class="file">fasttext_char_2_auto.py</td><td class="num">0.8944</td><td>字级 + <code>autotune</code> 自动调参</td></tr>
+  <tr><td class="file">fasttext_word_2_auto.py</td><td class="num">0.8588</td><td>词级 + <code>autotune</code> 自动调参</td></tr>
+</table>
+
+<h3>支撑文件</h3>
+<table>
+  <tr><th style="width:200px">文件</th><th>功能</th></tr>
+  <tr><td class="file">config.py <span class="tag tag-mid">重点改造</span></td>
+      <td>路径 + 超参。<b>关键：内置中文路径兼容层</b>——fastText 是 C++ 内核，用窄字符接口，无法打开含中文的路径（本项目路径含「深度学习」必然失败），故把读写重定向到 <code>%TEMP%/ft_ascii_workspace</code>；另附 numpy 2.x 的 <code>get_input_matrix</code> 补丁</td></tr>
+  <tr><td class="file">data_process.py</td><td>生成 <code>char_*</code>（逐字）与 <code>word_*</code>（jieba）两组共 6 个文件，支持中文 <code>__label__</code></td></tr>
+  <tr><td class="file">fasttext_predict_fun.py</td><td>推理函数，统一签名</td></tr>
+  <tr><td class="file">api_flask_server.py</td><td>Flask 服务，端口 6000</td></tr>
+  <tr><td class="file">streamlit_app.py</td><td>前端页面</td></tr>
+  <tr><td class="file">ft_*.log <span class="tag tag-tmp">日志</span></td><td>四个训练脚本的运行日志，可删除</td></tr>
+</table>
+</div>
+
+<!-- ========== 6. 04_Bett ========== -->
+<h2>六、04_Bett ｜ 主线方案：BERT 微调 + 三种压缩</h2>
+<div class="card">
+<p class="sub" style="margin-bottom:.5rem">成绩：accuracy 0.9310 / macro-F1 0.9343，比随机森林高 15 个点</p>
+
+<h3>核心训练与推理</h3>
+<table>
+  <tr><th style="width:190px">文件</th><th>功能</th></tr>
+  <tr><td class="file">config.py <span class="tag tag-mid">重点改造</span></td>
+      <td><b>全项目最重要的配置文件</b>。集中管理：数据路径、6 类标签映射、超参（max_len=64 / epochs=3 / lr=2e-5 / batch_size=8）、置信度阈值（0.60）、类别加权开关、蒸馏与剪枝的全部参数。换业务场景时主要改这里</td></tr>
+  <tr><td class="file">bert_train.py <span class="tag tag-mid">重点改造</span></td>
+      <td>训练主脚本：构建 DataLoader → 训练 → 验证 → 按最优 F1 存盘 → 测试集评估 → 输出分类报告与混淆矩阵 → 画训练曲线。<span class="tag tag-mid">已修</span>修复 <code>train()</code> 无返回值导致曲线画不出、测试集 <code>drop_last</code> 丢样本等问题</td></tr>
+  <tr><td class="file">bert_predict_fun.py <span class="tag tag-mid">重点改造</span></td>
+      <td>推理函数。除返回类别外，额外计算 <b>softmax 置信度</b>，低于 0.60 返回「需人工复核」并置 <code>need_review=True</code>——这是审核业务特有的拒判机制</td></tr>
+  <tr><td class="file">api_flask_server.py</td><td>Flask 服务，端口 6000。<code>jsonify(data)</code> 直接透传，所以新增字段无需改动此文件</td></tr>
+  <tr><td class="file">streamlit_app.py <span class="tag tag-mid">改造</span></td>
+      <td>前端页面：展示预测类别、置信度百分比、是否需人工复核、推理耗时</td></tr>
+</table>
+
+<h3>三种模型压缩 <span class="tag tag-new">本次新增</span></h3>
+<table>
+  <tr><th style="width:190px">文件</th><th style="width:110px">核心指标</th><th>功能</th></tr>
+  <tr><td class="file">bert_quantization.py</td><td class="num">390MB → 146MB</td>
+      <td>动态量化（<code>quantize_dynamic</code>，Linear 转 int8），附带体积与延迟核算。<span class="tag tag-mid">已修</span>强制 CPU 运行——修复 device 自动识别 CUDA 后出现的设备撞车</td></tr>
+  <tr><td class="file">bert_distillation.py</td><td class="num">102M → 45.6M</td>
+      <td>知识蒸馏：从 Teacher 12 层中等间隔抽 4 层初始化 Student，用 KL 软标签 + 硬标签 CE 联合训练。推理快 3.08x，F1 0.9230</td></tr>
+  <tr><td class="file">bert_pruning.py</td><td class="num">50% 稀疏度</td>
+      <td>全局 L1 非结构化剪枝，分 3 步渐进、每步剪完微调 1 轮，末尾再叠加量化。<span class="tag tag-mid">已修</span>弃用 <code>prune.global_unstructured</code> 改手动掩码，解决显存缓冲膨胀导致的速度崩溃</td></tr>
+</table>
+
+<h3>产出与日志</h3>
+<table>
+  <tr><th style="width:190px">文件</th><th>说明</th></tr>
+  <tr><td class="file">实验报告.html <span class="tag tag-new">本次新增</span></td>
+      <td>完整实验报告（九节）：任务与数据、核心指标、四方案对比、加权实验、混淆矩阵、阈值扫描、量化、蒸馏、剪枝、工程修复清单</td></tr>
+  <tr><td class="file">train_curves.png</td><td>训练曲线图（loss / acc / F1 各三轮）</td></tr>
+  <tr><td class="file">train_results.json</td><td>每轮指标的结构化记录</td></tr>
+  <tr><td class="file">train.log <br> train_weighted.log <br> quant.log / prune.log <br> distill.log / distill2.log <br> smoke_prune.log / verify_prune.log <span class="tag tag-tmp">日志</span></td>
+      <td>各阶段运行日志与调试记录，全部可删除，不影响任何功能</td></tr>
+</table>
+</div>
+
+<!-- ========== 7. 05-LLM ========== -->
+<h2>七、05-LLM ｜ 对照方案：DeepSeek 大模型</h2>
+<div class="card">
+<table>
+  <tr><th style="width:200px">文件</th><th>功能</th></tr>
+  <tr><td class="file">deepseek_predict_fun.py <span class="tag tag-mid">重点改造</span></td>
+      <td>核心：广告合规审核提示词（6 类定义 + 4 条消歧规则 + 12 条 Few-Shot + 拒判机制）+ 推理函数。用于回答「这个场景值不值得上大模型」</td></tr>
+  <tr><td class="file">提示词工程测试.py</td><td>提示词调试脚本，单条文本快速试效果</td></tr>
+  <tr><td class="file">测试deepseek接口文档.py</td><td>官网接口连通性的最小测试样例</td></tr>
+  <tr><td class="file">api_flask_server.py</td><td>Flask 服务，<b>端口 5002</b>（硬编码，与前三个方案的 6000 不同）</td></tr>
+  <tr><td class="file">streamlit_app.py</td><td>前端页面，请求 5002</td></tr>
+  <tr><td class="file">.env <span class="tag tag-tmp">敏感</span></td>
+      <td class="bad">存放 DEEPSEEK_API_KEY。分享项目前务必删除此文件</td></tr>
+</table>
+</div>
+
+<!-- ========== 8. 00-test ========== -->
+<h2>八、00-test / test ｜ Flask 入门练习（与本项目无关）</h2>
+<div class="card">
+<table>
+  <tr><th style="width:200px">文件</th><th>功能</th></tr>
+  <tr><td class="file">01_flask入门.py</td><td>Flask 最小示例：定义路由返回字符串</td></tr>
+  <tr><td class="file">01_flask 入门_优化版.py</td><td>进阶：模板渲染、表单提交、图片展示</td></tr>
+  <tr><td class="file">templates/*.html</td><td>三个 Jinja2 模板：index / welcome / show_image</td></tr>
+  <tr><td class="file">imgs/*.jpg</td><td>模板里展示的示例图片</td></tr>
+</table>
+<div class="note" style="margin-top:.75rem">
+<b>test 目录是 00-test 的早期副本</b>（少一张 img2.jpg，优化版代码略有差异），属于练手时留下的冗余。两个目录都可以安全删除，不影响主线任何功能。
+</div>
+</div>
+
+<!-- ========== 9. 运行顺序 ========== -->
+<h2>九、运行顺序</h2>
+<div class="card">
+<h3>1. 准备数据（只在换数据集时需要）</h3>
+<pre>cd 01-data
+python prepare_adaudit_data.py        # 生成 train/dev/test.txt + class.txt
+cd ../03-fasttext &amp;&amp; python data_process.py   # 生成 char_* / word_*
+cd ../02-rf      &amp;&amp; python data_process.py    # 生成 process_train.csv</pre>
+
+<h3>2. 训练四套方案</h3>
+<pre>cd 02-rf        &amp;&amp; python rf_train.py                  # 随机森林   F1 0.78
+cd ../03-fasttext &amp;&amp; python fasttext_char_default.py    # fastText    F1 0.9079
+cd ../04_Bett   &amp;&amp; python bert_train.py                 # BERT 微调   F1 0.9343</pre>
+
+<h3>3. 模型压缩（可选）</h3>
+<pre>python bert_quantization.py     # 动态量化
+python bert_distillation.py     # 知识蒸馏 12→4 层
+python bert_pruning.py          # 非结构化剪枝 50%</pre>
+
+<h3>4. 起服务与页面（两个终端）</h3>
+<pre># 终端 1：Flask 推理服务
+cd 04_Bett
+python api_flask_server.py
+
+# 终端 2：Streamlit 前端
+python -m streamlit run streamlit_app.py</pre>
+
+<div class="note danger" style="margin-top:.75rem">
+<b>必须用 DeepLearning 环境启动</b>：<code>D:\anaconda2024\envs\DeepLearning\python.exe</code><br>
+直接敲 <code>streamlit run</code> 会用到 base 环境，它没有装 torch，<code>config.py</code> 第一行 import 就会报错。
+</div>
+</div>
+
+<!-- ========== 10. 注意事项 ========== -->
+<h2>十、四个必须知道的坑</h2>
+<div class="card">
+<h3>1. 端口冲突</h3>
+<p>02-rf、03-fasttext、04_Bett 的 API 端口<b>都是 6000</b>，同一时间只能起其中一个。想同时对比要手动改各自 <code>config.py</code> 里的 <code>api_port</code>。05-LLM 是 5002，不冲突。</p>
+
+<h3>2. 项目路径不能改</h3>
+<p>fastText 的 C++ 内核读不了中文路径，全靠 <code>03-fasttext/config.py</code> 里的兼容层把读写搬到 <code>%TEMP%</code>。若把项目挪到别的中文目录，理论上仍可用，但不要绕过这个兼容层直接传路径。</p>
+
+<h3>3. batch_size 不要设 16</h3>
+<p>本机是 RTX 3050 Ti（4GB 显存），且浏览器、微信常驻占用。batch=16 会触发显存换页，速度掉到 1 it/s 以下；设 8 可稳定在 6 it/s。</p>
+
+<h3>4. 不要用管道跑训练</h3>
+<p><code>python bert_train.py | grep xxx</code> 会卡死——tqdm 用 <code>\r</code> 刷新进度且从不换行，管道会把所有进度攒成一行堆在内存里。正确做法是重定向到文件：<code>python bert_train.py &gt; train.log 2&gt;&amp;1</code>，再用 <code>tr '\r' '\n' &lt; train.log</code> 查看。</p>
+</div>
+
+<!-- ========== 11. 文件性质速查 ========== -->
+<h2>十一、文件性质速查：哪些可以删</h2>
+<div class="card">
+<table>
+  <tr><th style="width:110px">性质</th><th style="width:90px">可否删除</th><th>清单</th></tr>
+  <tr><td><b>核心代码</b></td><td class="bad">不可删</td>
+      <td class="file">prepare_adaudit_data.py</td></tr>
+  <tr><td><b>方案代码</b></td><td class="bad">不可删</td>
+      <td class="file">02-rf/*.py、03-fasttext/*.py、04_Bett/*.py、05-LLM/*.py</td></tr>
+  <tr><td><b>数据文件</b></td><td class="bad">不可删</td>
+      <td class="file">train/dev/test.txt、class.txt、char_*、word_*、process_train.csv、stopwords.txt、bert-base-chinese/</td></tr>
+  <tr><td><b>模型产物</b></td><td class="bad">不可删</td>
+      <td class="file">save_model/bert_model.pth（其余为对比存档，可按需清理）</td></tr>
+  <tr><td><b>日志文件</b></td><td class="good">可删</td>
+      <td class="file">*.log（02-rf 2 个、03-fasttext 4 个、04_Bett 8 个）</td></tr>
+  <tr><td><b>过期产物</b></td><td class="good">建议删</td>
+      <td class="file">save_model/bert_quuantizaiton_model.bin（旧拼写 + 旧 10 类模型）</td></tr>
+  <tr><td><b>冗余目录</b></td><td class="good">可删</td>
+      <td class="file">test/（00-test 的旧副本）、00-test/（Flask 练手）</td></tr>
+  <tr><td><b>敏感文件</b></td><td class="warn">勿外传</td>
+      <td class="file">05-LLM/.env（含 API Key）</td></tr>
+  <tr><td><b>历史备份</b></td><td class="warn">按需</td>
+      <td class="file">01-data/_backup_news/、01-data/_raw/chineseharm/</td></tr>
+</table>
+</div>
+
+<div class="sub" style="margin-top:2rem; text-align:center">
+本文件与 <code>04_Bett/实验报告.html</code> 配套阅读 ｜ 均为自包含单文件，可直接分享
+</div>
+
+</div>
+</body>
+</html>

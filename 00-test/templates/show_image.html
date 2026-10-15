@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>图片展示</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(120deg, #0b1220, #1d4ed8, #111827);
+      font-family: "Microsoft YaHei", sans-serif;
+    }
+    .wrap {
+      width: min(92vw, 960px);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 18px;
+      padding: 18px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+    }
+    .title {
+      color: #e5e7eb;
+      margin: 0 0 12px;
+      text-align: center;
+    }
+    img {
+      width: 100%;
+      max-height: 70vh;
+      object-fit: contain;
+      border-radius: 12px;
+      background: #0f172a;
+    }
+    .back {
+      margin-top: 14px;
+      text-align: center;
+    }
+    .back a {
+      color: #93c5fd;
+      text-decoration: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2 class="title">项目图片展示</h2>
+    <img src="{{ url_for('static', filename=image_name) }}" alt="展示图片" />
+    <div class="back"><a href="/">返回首页</a></div>
+  </div>
+</body>
+</html>

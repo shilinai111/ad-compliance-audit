@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>广告素材合规审核 · 模型实验报告</title>
+<style>
+  :root { --ink:#1f2329; --mut:#6b7280; --line:#e5e7eb; --bg:#f6f7f9; --card:#ffffff;
+          --blue:#185FA5; --teal:#0F6E56; --red:#A32D2D; --amber:#854F0B; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; color: var(--ink);
+         background: var(--bg); line-height: 1.7; font-size: 14px; padding: 2rem 1rem; }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: .25rem; }
+  .sub { color: var(--mut); font-size: 13px; margin-bottom: 2rem; }
+  h2 { font-size: 16px; font-weight: 600; margin: 2rem 0 .75rem; padding-left: .6rem;
+       border-left: 4px solid var(--blue); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+          padding: 1.1rem 1.25rem; margin-bottom: 1rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: .5rem .65rem; border-bottom: 1px solid var(--line); text-align: left; }
+  th { color: var(--mut); font-weight: 500; background: var(--bg); }
+  tr:last-child td { border-bottom: none; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .good { color: var(--teal); font-weight: 600; }
+  .bad { color: var(--red); font-weight: 600; }
+  .warn { color: var(--amber); font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 1rem 0; }
+  .metric { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: .9rem 1rem; }
+  .metric .k { font-size: 12px; color: var(--mut); }
+  .metric .v { font-size: 22px; font-weight: 600; margin-top: 2px; }
+  .metric .d { font-size: 12px; margin-top: 2px; }
+  .note { background: #FFF9EC; border: 1px solid #F0E3C0; border-radius: 8px;
+          padding: .8rem 1rem; font-size: 13px; margin: 1rem 0; }
+  .cm { font-variant-numeric: tabular-nums; }
+  .cm td { text-align: center; }
+  .cm td.rowh { text-align: left; font-weight: 500; }
+  .hit { background: #EAF3DE; }
+  .miss { background: #FCEBEB; font-weight: 600; }
+  ul { padding-left: 1.3rem; }
+  li { margin: .3rem 0; }
+  .chartbox { position: relative; height: 300px; margin: .8rem 0; }
+  footer { color: var(--mut); font-size: 12px; text-align: center; margin-top: 2.5rem; }
+  /* 打印/导出 PDF 优化：避免表格与卡片被分页撕裂 */
+  @media print {
+    body { background: #fff; padding: 0; font-size: 11.5px; }
+    .wrap { max-width: 100%; }
+    h2 { break-after: avoid; page-break-after: avoid; }
+    h1, .sub { break-after: avoid; page-break-after: avoid; }
+    table, .card, .grid, .metric { break-inside: avoid; page-break-inside: avoid; }
+    .card { border-color: #ccc; }
+    footer { margin-top: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>广告素材合规审核 · 模型实验报告</h1>
+<div class="sub">数据：HuggingFace zjunlp/ChineseHarm-bench ｜ 测试集 956 条 ｜ 2026-10-15 ｜ 硬件：RTX 3050 Ti Laptop (4GB)</div>
+
+<!-- ============ 任务概览 ============ -->
+<h2>一、任务与数据</h2>
+<div class="card">
+  <p><b>任务定义：</b>广告素材投放前合规审核。输入一段文案，输出 6 类判定；模型没把握时输出「需人工复核」（置信度阈值拒判）。</p>
+  <ul>
+    <li><b>类别：</b>0 不违规 / 1 黑产广告 / 2 欺诈 / 3 博彩 / 4 谩骂引战 / 5 低俗色情</li>
+    <li><b>规模：</b>去重后 9,503 条，分层抽样切分 train 7,600 / dev 947 / test 956</li>
+    <li><b>测试集分布不均：</b>低俗色情 201、谩骂引战 191、黑产广告 188、博彩 176、不违规 100、<span class="bad">欺诈仅 100</span></li>
+    <li><b>文本长度：</b>中位数 19 字、平均 42 字 → max_len=64</li>
+  </ul>
+</div>
+
+<!-- ============ 核心指标 ============ -->
+<h2>二、最终模型核心指标</h2>
+<div class="grid">
+  <div class="metric"><div class="k">测试集准确率</div><div class="v">93.1%</div><div class="d" style="color:var(--mut)">基线 93.3%（持平）</div></div>
+  <div class="metric"><div class="k">macro-F1</div><div class="v">93.4%</div><div class="d good">基线 93.0%（+0.4）</div></div>
+  <div class="metric"><div class="k">欺诈类召回</div><div class="v">94%</div><div class="d good">基线 77%（+17 个点）</div></div>
+  <div class="metric"><div class="k">量化后体积</div><div class="v">146 MB</div><div class="d good">390 MB → 压缩 63%</div></div>
+</div>
+
+<!-- ============ 四方案对比 ============ -->
+<h2>三、四套方案横向对比</h2>
+<div class="card">
+<table>
+  <tr><th>方案</th><th>关键配置</th><th class="num">accuracy</th><th class="num">macro-F1</th><th class="num">单条推理(CPU)</th></tr>
+  <tr><td><b>BERT 微调 + 类别加权</b>（最终采用）</td><td>batch 8 / max_len 64 / lr 2e-5 / 3 epoch / 加权损失</td><td class="num">0.931</td><td class="num"><b>0.934</b></td><td class="num">103 ms（量化后 73 ms）</td></tr>
+  <tr><td>BERT 微调（无加权基线）</td><td>同上，普通 CrossEntropy</td><td class="num">0.933</td><td class="num">0.930</td><td class="num">103 ms</td></tr>
+  <tr><td>BERT 动态量化 (int8)</td><td>对基线模型 quantize_dynamic</td><td class="num">0.915</td><td class="num">0.915</td><td class="num">73 ms</td></tr>
+  <tr><td>fastText 字级 · 手动参数</td><td>dim 32 / wordNgrams 2 / epoch 100</td><td class="num">—</td><td class="num">0.908</td><td class="num">&lt;1 ms</td></tr>
+  <tr><td>fastText 字级 · 自动调参</td><td>autotune 30s（结果有波动）</td><td class="num">—</td><td class="num">0.894~0.909</td><td class="num">&lt;1 ms</td></tr>
+  <tr><td>fastText 词级 · 手动参数</td><td>jieba 分词</td><td class="num">—</td><td class="num">0.872</td><td class="num">&lt;1 ms</td></tr>
+  <tr><td>fastText 词级 · 自动调参</td><td>体积上限 50M</td><td class="num">—</td><td class="num">0.855</td><td class="num">&lt;1 ms</td></tr>
+  <tr><td>随机森林 + TF-IDF</td><td>自带 8:2 切分（非同一测试集）</td><td class="num">0.784</td><td class="num">0.780</td><td class="num">&lt;1 ms</td></tr>
+</table>
+<div class="note"><b>选型结论：</b>BERT 比 fastText 字级高约 2.6 个点 F1，但推理慢百倍。若追求吞吐，fastText 字级 + 置信度兜底也是可用的粗筛方案；本场景误判代价高，最终采用 BERT（量化版粗筛 + 原始版复核的分层部署）。</div>
+</div>
+
+<!-- ============ 加权实验 ============ -->
+<h2>四、类别加权实验：把欺诈召回从 77% 拉到 94%</h2>
+<div class="card">
+  <p style="margin-bottom:.6rem"><b>问题：</b>欺诈是少数类（测试集仅 100 条），无加权基线 26 条误判（11 条→黑产广告、9 条→博彩），召回仅 0.77。</p>
+  <p style="margin-bottom:.6rem"><b>方法：</b>加权 CrossEntropyLoss，weight = √(N / (K·count))，开根号缓和过度补偿。实测权重：不违规 1.27、欺诈 1.26、黑产广告 0.92、博彩 0.95。</p>
+  <table>
+    <tr><th>类别</th><th class="num">F1 · 基线</th><th class="num">F1 · 加权</th><th class="num">召回 · 基线</th><th class="num">召回 · 加权</th><th>评价</th></tr>
+    <tr><td>欺诈</td><td class="num">0.851</td><td class="num good">0.904</td><td class="num">0.77</td><td class="num good">0.94</td><td>核心目标达成</td></tr>
+    <tr><td>不违规</td><td class="num">0.985</td><td class="num">0.990</td><td class="num">—</td><td class="num">0.99</td><td>持平</td></tr>
+    <tr><td>黑产广告</td><td class="num">0.950</td><td class="num">0.963</td><td class="num">—</td><td class="num">0.96</td><td>小幅提升</td></tr>
+    <tr><td>博彩</td><td class="num">0.940</td><td class="num">0.941</td><td class="num">—</td><td class="num">0.92</td><td>持平</td></tr>
+    <tr><td>谩骂引战</td><td class="num">0.934</td><td class="num warn">0.912</td><td class="num">—</td><td class="num">0.87</td><td>略有牺牲</td></tr>
+    <tr><td>低俗色情</td><td class="num">0.920</td><td class="num warn">0.895</td><td class="num">—</td><td class="num">0.94</td><td>精确率下降（谩骂→低俗 24 条）</td></tr>
+  </table>
+  <div class="note"><b>业务判断：</b>审核场景漏放欺诈的代价远高于多审几条低俗色情，这笔交换划算。<b>但要清醒：</b>诊断发现约一半误判样本属于「标注边界模糊」——「上岸」「打米」「七位数」是博彩黑话，「薇/丝信/柏」是防审核变形字，欺诈与博彩引流的语料本身犬牙交错。加权只能救回样本不均衡的部分，剩下的天花板在标注质量，继续调参收益有限。</div>
+</div>
+
+<!-- ============ 混淆矩阵 ============ -->
+<h2>五、最终模型混淆矩阵（测试集 956 条）</h2>
+<div class="card cm">
+<table>
+  <tr><th>真实 \ 预测</th><th>不违规</th><th>黑产广告</th><th>欺诈</th><th>博彩</th><th>谩骂引战</th><th>低俗色情</th></tr>
+  <tr><td class="rowh">不违规 (100)</td><td class="hit">99</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+  <tr><td class="rowh">黑产广告 (188)</td><td>0</td><td class="hit">181</td><td class="miss">6</td><td>0</td><td>0</td><td>1</td></tr>
+  <tr><td class="rowh">欺诈 (100)</td><td>0</td><td class="miss">5</td><td class="hit">94</td><td>1</td><td>0</td><td>0</td></tr>
+  <tr><td class="rowh">博彩 (176)</td><td>0</td><td>2</td><td class="miss">7</td><td class="hit">161</td><td>0</td><td>6</td></tr>
+  <tr><td class="rowh">谩骂引战 (191)</td><td>1</td><td>0</td><td>0</td><td>0</td><td class="hit">166</td><td class="miss">24</td></tr>
+  <tr><td class="rowh">低俗色情 (201)</td><td>0</td><td>0</td><td>1</td><td>4</td><td class="miss">7</td><td class="hit">189</td></tr>
+</table>
+<p style="font-size:12px;color:var(--mut);margin-top:.5rem">绿=判对，红=主要混淆源。最刺眼的是谩骂引战→低俗色情 24 条：辱骂文本常带性羞辱词，两类语义天然交叠。</p>
+</div>
+
+<!-- ============ 阈值拒判 ============ -->
+<h2>六、置信度阈值拒判（业务驱动的改进）</h2>
+<div class="card">
+  <p>原架构 argmax 永远硬判一类，但真实审核中「没把握」本身是合法答案。softmax 最高置信度低于阈值 → 转人工复核。</p>
+  <table style="margin-top:.6rem">
+    <tr><th class="num">阈值</th><th class="num">自动判定占比</th><th class="num">自动判定准确率</th><th class="num">违规召回</th><th>说明</th></tr>
+    <tr><td class="num">0.00</td><td class="num">100.0%</td><td class="num">93.10%</td><td class="num">92.4%</td><td>纯 argmax</td></tr>
+    <tr><td class="num"><b>0.60（采用）</b></td><td class="num">96.0%</td><td class="num">94.88%</td><td class="num">90.2%</td><td>4% 流量进人工，准确率 +1.8</td></tr>
+    <tr><td class="num">0.80</td><td class="num">90.9%</td><td class="num">96.55%</td><td class="num">86.4%</td><td>更保守</td></tr>
+    <tr><td class="num">0.90</td><td class="num">85.7%</td><td class="num">97.92%</td><td class="num">82.1%</td><td>召回损失过大</td></tr>
+  </table>
+</div>
+
+<!-- ============ 量化 ============ -->
+<h2>七、动态量化收益（CPU 部署视角）</h2>
+<div class="grid">
+  <div class="metric"><div class="k">体积</div><div class="v">390 → 146 MB</div><div class="d good">压缩到 37.3%</div></div>
+  <div class="metric"><div class="k">单条推理</div><div class="v">103 → 73 ms</div><div class="d good">1.41x</div></div>
+  <div class="metric"><div class="k">准确率</div><div class="v">93.3 → 91.5%</div><div class="d warn">-1.8 个点</div></div>
+</div>
+<div class="note"><b>部署建议：</b>量化版做线上粗筛（吞吐高、体积极轻），低置信度或高危命中回落到原始模型 / 人工。注意坑：修好 device 自动识别后，量化脚本必须把 <code>bert_train</code> 模块级 config 和本地 config 的 device <b>都</b>强制为 cpu，否则数据在 cuda、模型在 cpu 直接报错。</div>
+
+<!-- ============ 蒸馏 ============ -->
+<h2>八、知识蒸馏：12 层 Teacher → 4 层 Student</h2>
+<div class="note"><b>Student 从哪来：</b>本机只有 <code>bert-base-chinese</code> 一个预训练权重，没有现成的小中文 BERT，也不方便联网下载。所以采用<b>层裁剪初始化</b>——从 Teacher 的 12 层里按 uniform 策略等间隔抽第 [0, 4, 7, 11] 层，embedding / pooler / 分类头整块搬过来，再用蒸馏微调。<b>只抽层、还没蒸馏时 macro-F1 只有 0.2445</b>，蒸馏把它拉到 0.9230（<b>+0.679</b>）——这一栏最能说明蒸馏到底在干什么。</div>
+
+<div class="grid">
+  <div class="metric"><div class="k">参数量</div><div class="v">102.3 → 45.6 M</div><div class="d good">压缩 2.24x</div></div>
+  <div class="metric"><div class="k">单条推理</div><div class="v">5.19 → 1.68 ms</div><div class="d good">3.08x</div></div>
+  <div class="metric"><div class="k">accuracy</div><div class="v">93.1 → 92.5%</div><div class="d warn">-0.6 个点</div></div>
+  <div class="metric"><div class="k">macro-F1</div><div class="v">0.9343 → 0.9230</div><div class="d warn">-1.1 个点</div></div>
+  <div class="metric"><div class="k">与 Teacher 一致率</div><div class="v">92.6%</div><div class="d">行为高度对齐</div></div>
+</div>
+
+<table>
+<thead><tr><th>类别</th><th class="num">Teacher F1</th><th class="num">Student F1</th><th class="num">差值</th><th>说明</th></tr></thead>
+<tbody>
+  <tr><td>不违规</td><td class="num">0.9900</td><td class="num">0.9746</td><td class="num bad">-0.015</td><td>最简单的一类，几乎无损</td></tr>
+  <tr><td>黑产广告</td><td class="num">0.9628</td><td class="num">0.9600</td><td class="num">-0.003</td><td>完全保住</td></tr>
+  <tr><td>谩骂引战</td><td class="num">0.9121</td><td class="num">0.9286</td><td class="num good">+0.017</td><td>小模型反而更好</td></tr>
+  <tr><td>低俗色情</td><td class="num">0.8957</td><td class="num">0.9005</td><td class="num good">+0.005</td><td>基本持平</td></tr>
+  <tr><td>博彩</td><td class="num">0.9415</td><td class="num">0.9231</td><td class="num warn">-0.018</td><td>轻微损失</td></tr>
+  <tr><td><b>欺诈</b></td><td class="num">0.9038</td><td class="num">0.8513</td><td class="num bad">-0.053</td><td><b>召回 0.94 → 0.83，容量不足时少数类最先掉</b></td></tr>
+</tbody>
+</table>
+
+<div class="note"><b>踩过的坑：alpha 别照抄论文的 0.5。</b>第一轮用 <code>alpha=0.5 / 3 epochs</code>，Student 的欺诈召回只有 <b>0.77</b>，而 Teacher 加权后是 0.94——上一步类别加权换来的收益被蒸馏弄丢了。原因是软损失（KL）本身<b>不带类别权重</b>，它占一半话语权时就把少数类的判别拉平了。把 alpha 提到 <b>0.7</b>、epochs 提到 5 之后，硬损失（带类别权重）重新主导，欺诈召回回到 0.83：
+<table style="margin-top:.5rem">
+<thead><tr><th>配置</th><th class="num">accuracy</th><th class="num">macro-F1</th><th class="num">欺诈召回</th></tr></thead>
+<tbody>
+  <tr><td>alpha=0.5, 3 epochs</td><td class="num">0.9153</td><td class="num">0.9133</td><td class="num">0.77</td></tr>
+  <tr><td><b>alpha=0.7, 5 epochs（最终采用）</b></td><td class="num good">0.9247</td><td class="num good">0.9230</td><td class="num good">0.83</td></tr>
+</tbody>
+</table>
+<div style="margin-top:.5rem">另外验证集 F1 在第 4 轮达峰（0.9257）后第 5 轮回落到 0.9160，<code>best_f1</code> 存盘策略正确保存了第 4 轮而非最后一轮。</div>
+</div>
+
+<!-- ============ 剪枝 ============ -->
+<h2>九、非结构化剪枝：50% 稀疏度</h2>
+<div class="note"><b>方法：</b>全局 L1 幅度剪枝（magnitude pruning），分 3 步渐进到 50%，每步剪完立刻微调 1 轮让网络自我修复。只剪 Transformer 内的 Linear，<b>跳过分类头和 pooler</b>——它们参数量极小（768×6 / 768×768），剪了省不了空间却直接伤输出层。</div>
+
+<table>
+<thead><tr><th></th><th class="num">原始</th><th class="num">剪枝 50%</th><th class="num">剪枝 + 量化</th></tr></thead>
+<tbody>
+  <tr><td>accuracy</td><td class="num">0.9310</td><td class="num good">0.9320</td><td class="num warn">0.9163</td></tr>
+  <tr><td>macro-F1</td><td class="num">0.9343</td><td class="num">0.9305</td><td class="num warn">0.9146</td></tr>
+  <tr><td>稀疏度</td><td class="num">0%</td><td class="num">50.0%</td><td class="num">50.0%</td></tr>
+  <tr><td>存盘体积</td><td class="num">390.2 MB</td><td class="num">390.2 MB</td><td class="num good">145.6 MB</td></tr>
+  <tr><td><b>gzip 后</b></td><td class="num">362.3 MB</td><td class="num good">244.3 MB</td><td class="num good">98.0 MB</td></tr>
+  <tr><td>CPU 单条</td><td class="num">63.6 ms</td><td class="num">49.7 ms</td><td class="num">56.6 ms</td></tr>
+</tbody>
+</table>
+
+<div class="note"><b>关键认知：非结构化剪枝省的是「体积」，不是「速度」。</b>稀疏度已经 50%，但存盘体积<b>一点没变</b>（390.2 MB）——因为权重只是被置 0，用 float32 稠密格式存盘时 0 和别的数占一样大的空间。真正的收益要到 gzip 之后才显现（-32.6%，叠加量化后 -72.9%）。CPU 耗时也几乎没变化，因为普通稠密算子不会跳过 0，<b>必须配合稀疏计算库或专用硬件才有加速</b>。</div>
+
+<div class="card">
+<b>稀疏度阶梯（验证集，用于挑选精度/体积平衡点）：</b>
+<table style="margin-top:.5rem">
+<thead><tr><th class="num">目标稀疏度</th><th class="num">实际稀疏度</th><th class="num">val_acc</th><th class="num">val_f1</th></tr></thead>
+<tbody>
+  <tr><td class="num">17%</td><td class="num">16.67%</td><td class="num">0.9407</td><td class="num">0.9414</td></tr>
+  <tr><td class="num">33%</td><td class="num">33.33%</td><td class="num">0.9322</td><td class="num">0.9330</td></tr>
+  <tr><td class="num">50%</td><td class="num">50.00%</td><td class="num">0.9396</td><td class="num">0.9390</td></tr>
+</tbody>
+</table>
+<div style="margin-top:.5rem">未剪枝基线的验证 F1 是 <b>0.9441</b>，所以剪枝是<b>有代价</b>的，只是代价很小：17% 时 -0.3 个点、33% 时 -1.1 个点、50% 时 -0.5 个点。曲线非单调（33% 反而最低）是因为每步只微调了 1 轮、修复程度不同。关键点在于：<b>剪掉一半权重，验证 F1 只掉 0.5 个点</b>，说明这个 12 层模型在广告审核任务上明显过参数化，冗余度很高。</div>
+</div>
+
+<div class="note"><b>踩过的坑：别用 PyTorch 的 <code>prune.global_unstructured</code> 做迭代剪枝。</b>它给每个 Linear 挂上 <code>weight_orig</code> + <code>weight_mask</code> 两份 85M 的全精度缓冲，显存凭空多出约 0.68 GB。本机只有 4 GB 且被浏览器等常驻程序分走一部分，实测直接触发 WDDM 换页，训练速度从 6 it/s 掉到 <b>0.05 it/s（20 秒一个 batch）</b>。改成手动维护掩码（阈值在 CPU 上算，原地置 0，每个 <code>optimizer.step()</code> 后重新压制）后恢复 <b>5.7 it/s</b>，快了 100 倍。<br>另外它的 <code>amount</code> 是「在当前尚未被剪的权重中再剪掉的比例」而非累计比例，实测直接传 [1/6, 2/6, 3/6] 会复利叠加成 16.67% → 44.44% → 72.22%，第三步远超计划的 50%。</div>
+
+<!-- ============ 工程修复 ============ -->
+<h2>十、本次改造修复的工程问题（10 个）</h2>
+<div class="card"><ul>
+  <li><code>config.device</code> 被二次赋值硬编码成 cpu → 有显卡也永远跑 CPU；拆出 <code>quant_device</code> 修复</li>
+  <li><code>train()</code> 无 return 且指标只在最优轮追加 → 训练曲线只有 1 个点甚至 None</li>
+  <li>test_dataloader <code>drop_last=True</code> 丢尾部样本 → 测试指标不可信</li>
+  <li><code>lr=2e-4</code> 与注释 2e-5~5e-5 不符 → 回归 2e-5</li>
+  <li><code>rf_train.py</code> 被 IDE 误插入 <code>from pygments.lexer import words</code> → 启动即崩</li>
+  <li><b>fastText 打不开中文路径</b>（C++ 窄字符内核，路径含「深度学习」必崩）→ 加 ASCII 临时目录兼容层</li>
+  <li>fastText 自动调参挑到大 dim，输入矩阵 11GB 撑爆内存且无 Python 异常 → 加体积上限</li>
+  <li>量化脚本 device 撞车（本报告第七节）</li>
+  <li><b>迭代剪枝用 PyTorch prune 缓冲</b>导致显存膨胀、触发 WDDM 换页，速度掉 100 倍 → 改手动掩码（本报告第九节）</li>
+  <li><b>蒸馏 alpha=0.5 让不带类别权重的 KL 稀释硬损失</b>，欺诈召回从 0.94 回退到 0.77 → alpha 提到 0.7（本报告第八节）</li>
+</ul></div>
+
+<!-- ============ 遗留 ============ -->
+<h2>十一、遗留与下一步</h2>
+<div class="card"><ul>
+  <li><b>谩骂 ↔ 低俗色情边界</b>（24 条混淆）：可引入二阶段细分类或更换标注口径</li>
+  <li><b>黑话变形字</b>（米/柏/薇/丝信）：fastText 字级天然占优；BERT 可加对抗增强或黑话词典</li>
+  <li><b>DeepSeek 对照实验</b>：提示词已就绪（6 类定义 + 消歧规则 + 12 条 Few-Shot + 拒判），配置 DEEPSEEK_API_KEY 后可量化回答「这个场景值不值得上大模型」</li>
+  <li><b>欺诈标注质量</b>：建议抽 100 条欺诈/博彩边界样本人工复核，是比调参更划算的投入</li>
+  <li><b>Student 的欺诈召回仍是 0.83</b>（Teacher 0.94）：可尝试 6 层 Student、更高 alpha，或只对非欺诈类做蒸馏、欺诈类保留 Teacher</li>
+  <li><b>结构化剪枝</b>：本节是非结构化（只置 0），若想真正拿到推理加速，应做 attention head / FFN 维度的结构化裁剪，再配合稀疏算子</li>
+</ul></div>
+
+<footer>广告素材合规审核项目 · 由 THUCNews 新闻分类架构复刻改造 · 实验均在同一测试集（除 RF）</footer>
+</div>
+</body>
+</html>

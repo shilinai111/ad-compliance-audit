@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投满分项目</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 动态背景粒子 */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 15s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            text-align: center;
+            z-index: 1;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 90%;
+            backdrop-filter: blur(10px);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: glow 2s ease-in-out infinite;
+            font-weight: bold;
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                filter: drop-shadow(0 0 10px rgba(102, 126, 234, 0.5));
+            }
+            50% {
+                filter: drop-shadow(0 0 20px rgba(118, 75, 162, 0.8));
+            }
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .start-btn {
+            padding: 15px 50px;
+            font-size: 1.3em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .start-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .start-btn:hover::before {
+            left: 100%;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .start-btn:active {
+            transform: scale(0.98);
+        }
+
+        .image-container {
+            display: none;
+            margin-top: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 5px solid white;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(102, 126, 234, 0.2);
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .welcome-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 动态背景粒子 -->
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <div class="welcome-icon">🎉</div>
+        <h1>欢迎来到投满分项目</h1>
+        <p class="subtitle">智能分析 · 精准预测 · 专业服务</p>
+        
+        <button class="start-btn" onclick="showImage()">
+            开始体验
+        </button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px; color: #667eea;">加载中...</p>
+        </div>
+
+        <div class="image-container" id="imageContainer">
+            <img src="/a.jpg" alt="投满分项目图片">
+        </div>
+    </div>
+
+    <script>
+        // 创建动态粒子背景
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 20;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.width = particle.style.height = (Math.random() * 20 + 10) + 'px';
+                particle.style.animationDelay = Math.random() * 5 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // 显示图片
+        function showImage() {
+            const btn = document.querySelector('.start-btn');
+            const loading = document.getElementById('loading');
+            const imageContainer = document.getElementById('imageContainer');
+
+            // 隐藏按钮，显示加载动画
+            btn.style.display = 'none';
+            loading.style.display = 'block';
+
+            // 模拟加载延迟，提升用户体验
+            setTimeout(() => {
+                loading.style.display = 'none';
+                imageContainer.style.display = 'block';
+                
+                // 添加庆祝效果
+                createConfetti();
+            }, 800);
+        }
+
+        // 创建庆祝彩带效果
+        function createConfetti() {
+            const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe'];
+            const confettiCount = 50;
+
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.width = '10px';
+                confetti.style.height = '10px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.top = '-10px';
+                confetti.style.zIndex = '1000';
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                
+                document.body.appendChild(confetti);
+
+                const animation = confetti.animate([
+                    { transform: `translateY(0) rotate(0deg)`, opacity: 1 },
+                    { transform: `translateY(${window.innerHeight}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+                ], {
+                    duration: Math.random() * 2000 + 1500,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                    fill: 'forwards'
+                });
+
+                animation.onfinish = () => confetti.remove();
+            }
+        }
+
+        // 页面加载时创建粒子
+        window.onload = createParticles;
+    </script>
+</body>
+</html>

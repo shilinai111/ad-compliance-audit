@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>投满分项目</title>
+  <style>
+    :root {
+      --bg1: #0f172a;
+      --bg2: #1e293b;
+      --primary: #22d3ee;
+      --accent: #a78bfa;
+      --text: #e2e8f0;
+      --btnText: #0b1020;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 20% 20%, #1d4ed8 0%, transparent 35%),
+                  radial-gradient(circle at 80% 80%, #7c3aed 0%, transparent 35%),
+                  linear-gradient(135deg, var(--bg1), var(--bg2));
+      color: var(--text);
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      overflow: hidden;
+    }
+    .card {
+      width: min(92vw, 760px);
+      padding: 48px 32px;
+      border-radius: 24px;
+      text-align: center;
+      background: rgba(15, 23, 42, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 20px 60px rgba(2, 6, 23, 0.5);
+      animation: floatIn .9s ease;
+    }
+    h1 {
+      margin: 0 0 16px;
+      font-size: clamp(28px, 5vw, 54px);
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    p {
+      margin: 0 0 34px;
+      color: #cbd5e1;
+      font-size: clamp(14px, 2.1vw, 18px);
+    }
+    .start-btn {
+      display: inline-block;
+      padding: 14px 30px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 700;
+      color: var(--btnText);
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transition: transform .2s ease, box-shadow .2s ease;
+      box-shadow: 0 8px 24px rgba(34, 211, 238, 0.35);
+    }
+    .start-btn:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 12px 30px rgba(167, 139, 250, 0.4);
+    }
+    .glow {
+      position: absolute;
+      width: 360px;
+      height: 360px;
+      border-radius: 50%;
+      filter: blur(70px);
+      opacity: 0.35;
+      z-index: -1;
+      animation: drift 8s ease-in-out infinite alternate;
+    }
+    .g1 { background: #22d3ee; left: -80px; top: -60px; }
+    .g2 { background: #a78bfa; right: -80px; bottom: -70px; animation-delay: 1.2s; }
+
+    @keyframes floatIn {
+      from { opacity: 0; transform: translateY(15px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes drift {
+      from { transform: translate(0, 0); }
+      to { transform: translate(28px, -18px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow g1"></div>
+  <div class="glow g2"></div>
+
+  <section class="card">
+    <h1>欢迎来到投满分项目</h1>
+    <p>点击开始，立即查看精彩内容</p>
+    <a class="start-btn" href="/start">开始</a>
+  </section>
+</body>
+</html>
