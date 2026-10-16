@@ -3,7 +3,9 @@
    用过flask工具，构建  路由+视图函数 从而部署一个服务
 '''
 
-from flask import Flask, request, jsonify
+import os
+
+from flask import Flask, request, jsonify, send_from_directory
 # request  用于向服务器发送网络请求  或者 服务端用于接收数据
 # jsonify 将有python数据转化为Json格式才能在服务端和客户端之间传输
 '''{
@@ -23,6 +25,17 @@ config=Config()
 # 1.创建 Flask 实例
 app = Flask(__name__)   # __name__表示当前模块名
 
+# —— 同源托管前端工作台 ——
+# 访问 http://127.0.0.1:8000/ 直接打开 06-web/index.html。
+# 端口用 8000 而不是 6000：6000 在 Chromium 受限端口名单里，浏览器会报 ERR_UNSAFE_PORT。
+# 前端与接口同源 → 不触发跨域预检，演示时最稳（双击 06-web/index.html 也仍然可用）。
+FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "06-web")
+
+
+@app.route('/')
+def index():
+    return send_from_directory(FRONTEND_DIR, 'index.html')
+
 
 
 # 2.创建预测接口 (  创建路由 + 处理函数/视图函数，即服务器需要做什么事情)
@@ -31,8 +44,26 @@ app = Flask(__name__)   # __name__表示当前模块名
 # 路由就是一张"地址-功能"的映射表，告诉Web服务器：当用户访问某个URL时，应该执行什么代码。
 # 完整的URL = 协议 + IP地址 + 端口 + 路径  比如： http://159.226.71.206:5000/abc
 #  类比：  著名的医生 在哪个地址的大楼的哪个房间（科室），
-@app.route('/predict', methods=['POST'])
+# —— 跨域支持（CORS）：供 06-web/index.html 这类本地静态页面直接调用 ——
+# 浏览器从 file:// 或其它端口访问本机服务属于跨域，会先发 OPTIONS 预检请求。
+# 这里放行 OPTIONS 并回写 CORS 头，不引入任何新依赖。
+@app.after_request
+def _add_cors_headers(resp):
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    resp.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+    # Chrome 的「私有网络访问」预检会额外要求这个头；缺了它，从 file:// 打开的页面
+    # 访问 127.0.0.1 可能被浏览器直接拦掉（curl 测不出这一层）。
+    resp.headers['Access-Control-Allow-Private-Network'] = 'true'
+    return resp
+
+
+@app.route('/predict', methods=['POST', 'OPTIONS'])
 def predict1():   # 绑定一个视图函数， 当别人利用 GET方法访问这个地址url，应该做些什么。
+    # 跨域预检请求：直接回 204，不必进模型
+    if request.method == 'OPTIONS':
+        return ('', 204)
+
     # 收到的数据是json格式，需要先转化为 python对象
     data = request.get_json()
 

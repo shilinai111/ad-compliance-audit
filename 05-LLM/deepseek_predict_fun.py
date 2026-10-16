@@ -10,11 +10,23 @@
 
 
 
+import json
 import os
+import re
+
 from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# 类别顺序必须与 01-data/class.txt 一致（probs 数组按这个顺序排列）
+CLASS_LIST = ["不违规", "黑产广告", "欺诈", "博彩", "谩骂引战", "低俗色情"]
+REVIEW_CLASS = "需人工复核"
+
+# 置信度阈值：与其它三条路线同名同义，低于该值转人工复核（设为 0 关闭）。
+# 【重要】这里的"置信度"来自**模型自报的分数，未经校准**，与 BERT 的 softmax、
+# 随机森林的投票比例都不是一个东西，数值不可横向比较，阈值必须分别标定。
+CONF_THRESHOLD = 0.60
 
 
 SYSTEM_PROMPT="""
@@ -43,57 +55,67 @@ SYSTEM_PROMPT="""
 4. **普通商品促销**（打折、优惠券、新品上市）无灰产特征 → `不违规`，不要过度敏感。
 
 # Constraints
-1. **唯一性**: 对每个输入文本，只能输出一个最匹配的类别名称。
-2. **格式**: 仅输出类别名称本身（中文），严禁输出任何解释、序号、标点符号或额外文本。
-3. **范围**: 输出必须严格限制在以下六个之一：
+1. **唯一性**: 对每个输入文本，只能给出一个最匹配的类别（放在 JSON 的 class 字段）。
+2. **格式**: 只输出一个 JSON 对象，严禁解释、序号、markdown 代码块或任何额外文本。
+3. **范围**: class 必须严格限制在以下六个之一：
    `不违规`、`黑产广告`、`欺诈`、`博彩`、`谩骂引战`、`低俗色情`。
 4. **拒判机制**: 若文本过短（少于 4 个字）、语义完全无法判断，或你确实无法在六类中做出选择，
-   输出 `需人工复核`。宁可转人工，也不要瞎猜。
+   class 填 `需人工复核`（此时 scores 仍要给出你倾向的分布）。宁可转人工，也不要瞎猜。
 
-# Few-Shot Examples
+# Few-Shot Examples（只示范「该判哪一类」，最终输出格式统一见文末 Output Format）
 
 Input: 他吃完饭离开了餐厅。
-Output: 不违规
+类别: 不违规
 
 Input: 可有偿助力服务，助力一次0.5，可助力五次到六次，需要先加我
-Output: 黑产广告
+类别: 黑产广告
 
 Input: 店铺好评，销量提升联系我/我最美
-Output: 黑产广告
+类别: 黑产广告
 
 Input: 不用出门一天轻轻松松二三百，不收费需要滴滴
-Output: 欺诈
+类别: 欺诈
 
 Input: 来海外直播平台，月入十万不香吗？在这扭半天也没啥流量
-Output: 欺诈
+类别: 欺诈
 
 Input: n33qg.topn81ug.top这里可以打麻将
-Output: 博彩
+类别: 博彩
 
 Input: 浏览器搜索yhh09.top
-Output: 博彩
+类别: 博彩
 
 Input: 找骂的玩意，脑can
-Output: 谩骂引战
+类别: 谩骂引战
 
 Input: 日本狗菜成这样也敢叫，真不愧是日本狗喔
-Output: 谩骂引战
+类别: 谩骂引战
 
 Input: 济南狗奴隶求主人调教！有空房可以给主人住！
-Output: 低俗色情
+类别: 低俗色情
 
 Input: 91主播哈哈哈哈，他是卖的吧
-Output: 低俗色情
+类别: 低俗色情
 
 Input: 好
-Output: 需人工复核
+类别: 需人工复核
 
 # Workflow
 1. 接收待审核的文案文本。
 2. 扫描强特征：陌生域名 / 短链 → 博彩；钱+轻松赚 → 欺诈；刷量涨粉 → 黑产广告。
 3. 无强特征时再判断是否存在辱骂或色情语义。
 4. 以上都不成立 → 不违规；仍无法判断 → 需人工复核。
-5. 只输出类别名称。"""
+5. 按下面的 Output Format 输出 JSON。
+
+# Output Format（必须严格遵守）
+只输出一个 JSON 对象，形如：
+{"class":"欺诈","scores":{"不违规":0.02,"黑产广告":0.10,"欺诈":0.80,"博彩":0.03,"谩骂引战":0.02,"低俗色情":0.03}}
+
+scores 规则：
+- 必须包含全部六个类别，值为 0~1 的数；**不必和为 1**，按相对大小给即可（系统会自行归一化）
+- class 必须等于 scores 里最大的那个类别；若拒判则填 `需人工复核`
+- 分数标定参考：强特征明确时最高分 0.85~0.98；边界/模糊样本 0.40~0.65；完全无法判断时六类分数都低且接近
+"""
 
 
 
@@ -117,22 +139,91 @@ def call_deepseek_api(user_prompt, system_prompt='You are a helpful assistent'):
 
     return response.choices[0].message.content
 
-# 合法输出集合：与 01-data/class.txt 的 6 个类别保持一致，另加兜底项「需人工复核」
-VALID_CLASSES = set(["不违规", "黑产广告", "欺诈", "博彩", "谩骂引战", "低俗色情"])
-REVIEW_CLASS = "需人工复核"
+# 合法输出集合：与 01-data/class.txt 的 6 个类别保持一致（REVIEW_CLASS 已在文件顶部定义）
+VALID_CLASSES = set(CLASS_LIST)
+
+
+def _extract_json(raw):
+    """尽力从模型输出里取出那个 JSON 对象：容忍 ```json 代码围栏与前后多余文字。"""
+    t = (raw or "").strip()
+    if t.startswith("```"):
+        t = re.sub(r"^```[a-zA-Z]*\s*", "", t)
+        t = re.sub(r"\s*```$", "", t).strip()
+    try:
+        return json.loads(t)
+    except Exception:  # noqa: BLE001
+        pass
+    i, j = t.find("{"), t.rfind("}")
+    if i != -1 and j > i:
+        try:
+            return json.loads(t[i:j + 1])
+        except Exception:  # noqa: BLE001
+            pass
+    return None
+
+
+def _normalize_class(value):
+    """把模型给出的类别文本归一到六类之一；无法归一则返回 None。"""
+    if not isinstance(value, str):
+        return None
+    s = value.strip().strip('"\'`。，,')
+    if s in VALID_CLASSES:
+        return s
+    if s == REVIEW_CLASS:
+        return REVIEW_CLASS
+    hit = [c for c in CLASS_LIST if c in s]
+    return hit[0] if len(hit) == 1 else None
+
+
+def _extract_probs(payload):
+    """从 JSON 里取出六类分数并归一化为概率；缺项或非法值返回 None。"""
+    if not isinstance(payload, dict):
+        return None
+    scores = payload.get("scores")
+    if not isinstance(scores, dict):
+        return None
+    values = []
+    for name in CLASS_LIST:
+        try:
+            values.append(max(0.0, float(scores.get(name))))
+        except (TypeError, ValueError):
+            return None
+    total = sum(values)
+    return [v / total for v in values] if total > 0 else None
 
 
 def predict_fun(data):
     text = data['text']
+    raw = call_deepseek_api(text, SYSTEM_PROMPT)
 
-    pred_class = call_deepseek_api(text, SYSTEM_PROMPT).strip()
+    payload = _extract_json(raw)
+    probs = _extract_probs(payload)
 
-    # 大模型偶尔会夹带标点、前后缀或输出范围外的类别，这里做一次兜底归一
-    if pred_class not in VALID_CLASSES:
-        hit = [c for c in VALID_CLASSES if c in pred_class]
-        pred_class = hit[0] if len(hit) == 1 else REVIEW_CLASS
+    model_class = None
+    if isinstance(payload, dict):
+        model_class = _normalize_class(payload.get("class") or payload.get("pred_class"))
+    if model_class is None:
+        model_class = _normalize_class(raw)      # JSON 解析失败时退回纯文本解析
 
-    data['pred_class'] = pred_class
+    # 有分数时以分数最大项为准，保证「类别」与「置信度」严格自洽
+    leaning, conf = None, None
+    if probs is not None:
+        top = max(range(len(probs)), key=lambda i: probs[i])
+        leaning = CLASS_LIST[top]
+        conf = probs[top]
+
+    base = leaning or model_class                  # 模型真正的判断（可能为 None）
+
+    reject_by_conf = (conf is not None and CONF_THRESHOLD > 0 and conf < CONF_THRESHOLD)
+    reject_by_model = (model_class == REVIEW_CLASS)
+    need_review = reject_by_conf or reject_by_model or (base is None)
+
+    data['pred_class'] = REVIEW_CLASS if need_review else base
+    data['raw_class'] = base if base else REVIEW_CLASS
+    data['confidence'] = round(conf, 4) if conf is not None else None
+    data['need_review'] = need_review
+    if probs is not None:
+        data['probs'] = [round(p, 4) for p in probs]
     return data
 
 

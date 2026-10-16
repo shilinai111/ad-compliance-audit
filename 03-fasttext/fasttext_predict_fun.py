@@ -45,9 +45,9 @@ model= fasttext.load_model(ft_ascii(config.ft_model_path.replace('.bin','_char_1
 # 推理函数
 def predict_fun(data):
      """
-     预测函数，把传入的data字典，调用模型预测得到预测结果，返回带有预测结果的字典
+     预测函数：返回类别 + 六类概率 + 置信度拒判结果（与 BERT 路线的返回契约保持一致）
      :param data: 传入的字典，格式{text: 文本内容}
-     :return: 带有预测结果的字典，格式{text: 文本内容, pred_class: 预测标签名称}
+     :return: {text, pred_class, raw_class, confidence, need_review, probs}
      """
 
      # 根据训练时的数据预处理，对客户端送入的数据文本进行按字分词
@@ -55,10 +55,35 @@ def predict_fun(data):
 
      split_text = ' '.join(list(text))
 
-     y_pred = model.predict(split_text)
-     y_pred =  y_pred[0][0].replace('__label__','')
+     # k=类别数：要回全部类别的概率（用来画概率条 + 做拒判），不再只要 Top-1。
+     # 之前用的是默认 k=1，概率信息就此丢掉。
+     labels, scores = model.predict(split_text, k=len(model.get_labels()))
 
-     data['pred_class']=y_pred
+     with open(config.class_path, 'r', encoding='utf-8') as f:
+         class_list = [line.strip() for line in f if line.strip()]
+
+     # fastText 的标签是中文类别名（__label__不违规），且只返回概率非零的类别，
+     # 所以要按名字映射回固定顺序的六槽位
+     probs = [0.0] * len(class_list)
+     for lab, sc in zip(labels, scores):
+         name = lab.replace('__label__', '')
+         if name in class_list:
+             probs[class_list.index(name)] = float(sc)
+
+     top = max(range(len(probs)), key=lambda i: probs[i])
+     y_pred = class_list[top]
+     conf = probs[top]
+
+     # 与 BERT 路线一致的拒判语义：低于阈值时 pred_class 换成「需人工复核」，
+     # 原判保留在 raw_class 供人工参考
+     threshold = getattr(config, 'conf_threshold', 0.0)
+     need_review = threshold > 0 and conf < threshold
+
+     data['pred_class'] = '需人工复核' if need_review else y_pred
+     data['raw_class'] = y_pred
+     data['confidence'] = round(conf, 4)
+     data['need_review'] = need_review
+     data['probs'] = [round(p, 4) for p in probs]
 
      return data
 

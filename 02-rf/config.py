@@ -34,17 +34,24 @@ class Config():
         self.process_test_path = os.path.join(self.root_path, "process_test.csv")
 
         #创建新文件夹，保存每个模型训练后的参数文件
-        os.makedirs(os.path.join(self.root_path, "save.model"), exist_ok=True)
+        os.makedirs(os.path.join(self.root_path, "save_model"), exist_ok=True)
 
         #训练时的路径
-        self.rf_model_path = os.path.join(self.root_path, "save.model",'rf_model.pkl')
+        self.rf_model_path = os.path.join(self.root_path, "save_model",'rf_model.pkl')
 
         #保存tf-idf算法的结果’
-        self.tfidf_model_path = os.path.join(self.root_path, "save.model",'tfidf_model.pkl')
+        self.tfidf_model_path = os.path.join(self.root_path, "save_model",'tfidf_model.pkl')
 
         #API服务搭建参数配置
         self.api_host = '127.0.0.1'
-        self.api_port = '6000'  #端口号
+        # 8001：避开 Chromium 受限端口 6000（浏览器会报 ERR_UNSAFE_PORT），
+        # 并与 BERT(8000) / fastText(8002) 区分，三个服务可同时启动。
+        self.api_port = '8001'  #端口号
+
+        # 置信度阈值：与 BERT 路线同名同义，低于该值转人工复核（设为 0 即关闭该功能）。
+        # 注意随机森林没有 softmax，它的"置信度"是 200 棵树的投票比例，尺度偏保守，
+        # 与 BERT 的 softmax 数值不可直接比较，汇报时应分别标定。
+        self.conf_threshold = 0.60
 
 
 # 2. 对数据文件进行去重并保存到新的文件中

@@ -31,8 +31,25 @@ app = Flask(__name__)   # __name__表示当前模块名
 # 路由就是一张"地址-功能"的映射表，告诉Web服务器：当用户访问某个URL时，应该执行什么代码。
 # 完整的URL = 协议 + IP地址 + 端口 + 路径  比如： http://159.226.71.206:5000/abc
 #  类比：  著名的医生 在哪个地址的大楼的哪个房间（科室），
-@app.route('/predict', methods=['POST'])
+# —— 跨域支持（CORS）：供 06-web/index.html 这类本地静态页面直接调用 ——
+# 浏览器从 file:// 或其它端口访问本机服务属于跨域，会先发 OPTIONS 预检请求。
+# 这里放行 OPTIONS 并回写 CORS 头，不引入任何新依赖。
+@app.after_request
+def _add_cors_headers(resp):
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    resp.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+    # Chrome 的「私有网络访问」预检会额外要求这个头（与 04_Bett 保持一致）
+    resp.headers['Access-Control-Allow-Private-Network'] = 'true'
+    return resp
+
+
+@app.route('/predict', methods=['POST', 'OPTIONS'])
 def predict1():   # 绑定一个视图函数， 当别人利用 GET方法访问这个地址url，应该做些什么。
+    # 跨域预检请求：直接回 204，不必调大模型
+    if request.method == 'OPTIONS':
+        return ('', 204)
+
     # 收到的数据是json格式，需要先转化为 python对象
     data = request.get_json()
 

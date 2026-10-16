@@ -1,0 +1,44 @@
+{
+  "format": "pptx",
+  "verdict": "pass",
+  "checks": [
+    {
+      "id": "package",
+      "status": "pass"
+    },
+    {
+      "id": "contains",
+      "status": "pass",
+      "text": "\u5e7f\u544a\u7d20\u6750\u5408\u89c4\u5ba1\u6838\u7cfb\u7edf"
+    },
+    {
+      "id": "contains",
+      "status": "pass",
+      "text": "0.9343"
+    },
+    {
+      "id": "contains",
+      "status": "pass",
+      "text": "ERR_UNSAFE_PORT"
+    },
+    {
+      "id": "contains",
+      "status": "pass",
+      "text": "val_f1"
+    },
+    {
+      "id": "contains",
+      "status": "pass",
+      "text": "\u56db\u6761\u8def\u7ebf\u7684\u300c\u7f6e\u4fe1\u5ea6\u300d"
+    },
+    {
+      "id": "count",
+      "status": "pass",
+      "expected": 20,
+      "actual": 20
+    }
+  ],
+  "summary": {
+    "slides": 20
+  }
+}

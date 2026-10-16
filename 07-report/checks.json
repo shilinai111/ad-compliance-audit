@@ -1,0 +1,39 @@
+{
+  "format": "pptx",
+  "verdict": "pass",
+  "checks": [
+    {
+      "id": "package",
+      "status": "pass"
+    },
+    {
+      "id": "contains",
+      "status": "pass",
+      "text": "\u5e7f\u544a\u7d20\u6750\u5408\u89c4\u5ba1\u6838\u7cfb\u7edf"
+    },
+    {
+      "id": "contains",
+      "status": "pass",
+      "text": "macro-F1"
+    },
+    {
+      "id": "contains",
+      "status": "pass",
+      "text": "ERR_UNSAFE_PORT"
+    },
+    {
+      "id": "contains",
+      "status": "pass",
+      "text": "\u53e3\u5f84\u63d0\u9192"
+    },
+    {
+      "id": "count",
+      "status": "pass",
+      "expected": 20,
+      "actual": 20
+    }
+  ],
+  "summary": {
+    "slides": 20
+  }
+}

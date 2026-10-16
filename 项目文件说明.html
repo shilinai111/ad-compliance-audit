@@ -179,12 +179,12 @@
 <p class="sub" style="margin-bottom:.5rem">成绩：accuracy 0.78 / macro-F1 0.78 —— 作为传统机器学习基线，用来衬托 BERT 的价值</p>
 <table>
   <tr><th style="width:180px">文件</th><th>功能</th></tr>
-  <tr><td class="file">config.py</td><td>路径、超参、API 端口（6000）</td></tr>
+  <tr><td class="file">config.py</td><td>路径、超参、API 端口（<b>8001</b>；原为 6000，已改，见文末「端口」一节）</td></tr>
   <tr><td class="file">data_process.py</td><td>读 txt → jieba 分词 → 去停用词 → 写出 <code>process_train.csv</code></td></tr>
   <tr><td class="file">rf_train.py</td><td>TF-IDF 向量化 + 随机森林训练，保存 <code>rf_model.pkl</code> 与 <code>tfidf_model.pkl</code>。<span class="tag tag-mid">已修</span>删除了 IDE 误插入的 <code>from pygments.lexer import words</code></td></tr>
   <tr><td class="file">rf_predic_fun.py</td><td>推理函数 <code>predict_fun(data)</code>，符合统一推理契约</td></tr>
   <tr><td class="file">rf_test.py</td><td>在验证集上评估：准确率 / 精确率 / 召回率 / F1 / 混淆矩阵</td></tr>
-  <tr><td class="file">api_flask_server.py</td><td>Flask 服务，<code>POST /predict</code>，端口 6000</td></tr>
+  <tr><td class="file">api_flask_server.py</td><td>Flask 服务，<code>POST /predict</code>，端口 <b>8001</b>；已加 CORS 头与 <code>OPTIONS</code> 放行</td></tr>
   <tr><td class="file">api_test.py</td><td>命令行交互测试：手动输入文本 → 调用接口 → 打印结果</td></tr>
   <tr><td class="file">streamlit_app.py</td><td>前端页面，已改为广告审核文案</td></tr>
   <tr><td class="file">dp.log / rf_train.log <span class="tag tag-tmp">日志</span></td><td>运行日志，可随时删除</td></tr>
@@ -210,7 +210,7 @@
       <td>路径 + 超参。<b>关键：内置中文路径兼容层</b>——fastText 是 C++ 内核，用窄字符接口，无法打开含中文的路径（本项目路径含「深度学习」必然失败），故把读写重定向到 <code>%TEMP%/ft_ascii_workspace</code>；另附 numpy 2.x 的 <code>get_input_matrix</code> 补丁</td></tr>
   <tr><td class="file">data_process.py</td><td>生成 <code>char_*</code>（逐字）与 <code>word_*</code>（jieba）两组共 6 个文件，支持中文 <code>__label__</code></td></tr>
   <tr><td class="file">fasttext_predict_fun.py</td><td>推理函数，统一签名</td></tr>
-  <tr><td class="file">api_flask_server.py</td><td>Flask 服务，端口 6000</td></tr>
+  <tr><td class="file">api_flask_server.py</td><td>Flask 服务，端口 <b>8002</b>；已加 CORS 头与 <code>OPTIONS</code> 放行</td></tr>
   <tr><td class="file">streamlit_app.py</td><td>前端页面</td></tr>
   <tr><td class="file">ft_*.log <span class="tag tag-tmp">日志</span></td><td>四个训练脚本的运行日志，可删除</td></tr>
 </table>
@@ -230,7 +230,7 @@
       <td>训练主脚本：构建 DataLoader → 训练 → 验证 → 按最优 F1 存盘 → 测试集评估 → 输出分类报告与混淆矩阵 → 画训练曲线。<span class="tag tag-mid">已修</span>修复 <code>train()</code> 无返回值导致曲线画不出、测试集 <code>drop_last</code> 丢样本等问题</td></tr>
   <tr><td class="file">bert_predict_fun.py <span class="tag tag-mid">重点改造</span></td>
       <td>推理函数。除返回类别外，额外计算 <b>softmax 置信度</b>，低于 0.60 返回「需人工复核」并置 <code>need_review=True</code>——这是审核业务特有的拒判机制</td></tr>
-  <tr><td class="file">api_flask_server.py</td><td>Flask 服务，端口 6000。<code>jsonify(data)</code> 直接透传，所以新增字段无需改动此文件</td></tr>
+  <tr><td class="file">api_flask_server.py</td><td>Flask 服务，端口 <b>8000</b>。新增根路由 <code>/</code> 直接托管 <code>06-web/index.html</code>（前端与接口同源，免跨域），并加了 CORS 响应头与 <code>OPTIONS</code> 放行。<code>jsonify(data)</code> 直接透传，所以新增字段无需改动此文件</td></tr>
   <tr><td class="file">streamlit_app.py <span class="tag tag-mid">改造</span></td>
       <td>前端页面：展示预测类别、置信度百分比、是否需人工复核、推理耗时</td></tr>
 </table>
@@ -267,7 +267,7 @@
       <td>核心：广告合规审核提示词（6 类定义 + 4 条消歧规则 + 12 条 Few-Shot + 拒判机制）+ 推理函数。用于回答「这个场景值不值得上大模型」</td></tr>
   <tr><td class="file">提示词工程测试.py</td><td>提示词调试脚本，单条文本快速试效果</td></tr>
   <tr><td class="file">测试deepseek接口文档.py</td><td>官网接口连通性的最小测试样例</td></tr>
-  <tr><td class="file">api_flask_server.py</td><td>Flask 服务，<b>端口 5002</b>（硬编码，与前三个方案的 6000 不同）</td></tr>
+  <tr><td class="file">api_flask_server.py</td><td>Flask 服务，<b>端口 5002</b>（硬编码，与其它三个方案的 8000 / 8001 / 8002 都不同）</td></tr>
   <tr><td class="file">streamlit_app.py</td><td>前端页面，请求 5002</td></tr>
   <tr><td class="file">.env <span class="tag tag-tmp">敏感</span></td>
       <td class="bad">存放 DEEPSEEK_API_KEY。分享项目前务必删除此文件</td></tr>
@@ -325,8 +325,9 @@ python -m streamlit run streamlit_app.py</pre>
 <!-- ========== 10. 注意事项 ========== -->
 <h2>十、四个必须知道的坑</h2>
 <div class="card">
-<h3>1. 端口冲突</h3>
-<p>02-rf、03-fasttext、04_Bett 的 API 端口<b>都是 6000</b>，同一时间只能起其中一个。想同时对比要手动改各自 <code>config.py</code> 里的 <code>api_port</code>。05-LLM 是 5002，不冲突。</p>
+<h3>1. 端口：6000 会被浏览器封禁（已修复）</h3>
+<p>原设计里 02-rf、03-fasttext、04_Bett 的 API 端口<b>都是 6000</b>，同时踩了两个问题：<b>①</b> 三个服务互相抢端口，同一时间只能起一个；<b>②</b> <b>6000 在 Chromium（Chrome / Edge）的受限端口名单里</b>，浏览器会直接拒绝连接并报 <code>ERR_UNSAFE_PORT</code> —— 网页端永远连不上接口。坑在于 <code>curl</code> / <code>requests</code> <b>不检查</b>这份名单，所以命令行测试一切正常，只有浏览器会失败。</p>
+<p>现已改为浏览器安全端口且互不冲突：<b>BERT 8000 / 随机森林 8001 / fastText 8002</b>，05-LLM 仍是 5002。三个服务可以同时启动。</p>
 
 <h3>2. 项目路径不能改</h3>
 <p>fastText 的 C++ 内核读不了中文路径，全靠 <code>03-fasttext/config.py</code> 里的兼容层把读写搬到 <code>%TEMP%</code>。若把项目挪到别的中文目录，理论上仍可用，但不要绕过这个兼容层直接传路径。</p>

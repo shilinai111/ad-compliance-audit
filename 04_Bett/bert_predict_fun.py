@@ -43,6 +43,10 @@ def predict_fun(data):
 
     y_pred_class = config.id2class[y_pred]
 
+    # 把六类完整概率一并返回，前端才能画出真实的概率分布条（此前 probs 算完就丢了）
+    # 顺序与 01-data/class.txt 一致：不违规 / 黑产广告 / 欺诈 / 博彩 / 谩骂引战 / 低俗色情
+    data['probs'] = [round(p, 4) for p in probs.tolist()]
+
     # 广告审核的兜底机制
     # argmax 永远会挑一个类别出来，但真实审核场景里"我没把握"本身就是合法答案。
     # 置信度低于阈值就转人工，避免模型硬判导致误杀正常素材或漏放违规内容。

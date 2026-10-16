@@ -1,0 +1,293 @@
+{
+  "schemaVersion": 1,
+  "backend": "native",
+  "rasterEngine": "libreoffice",
+  "source": "saved",
+  "inputPath": "D:\\pythondm\\深度学习\\code\\07-report\\广告素材合规审核系统_汇报.pptx",
+  "sourceSha256": "90c2cd379162657c81a14abab08cf16a09ea615e389304fdf461ab0ad2233f6d",
+  "dpi": 120,
+  "pageCount": 20,
+  "images": [
+    {
+      "index": 1,
+      "page": 1,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0001.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 70015
+    },
+    {
+      "index": 2,
+      "page": 2,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0002.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 76397
+    },
+    {
+      "index": 3,
+      "page": 3,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0003.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 106794
+    },
+    {
+      "index": 4,
+      "page": 4,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0004.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 115726
+    },
+    {
+      "index": 5,
+      "page": 5,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0005.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 80235
+    },
+    {
+      "index": 6,
+      "page": 6,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0006.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 108526
+    },
+    {
+      "index": 7,
+      "page": 7,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0007.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 100870
+    },
+    {
+      "index": 8,
+      "page": 8,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0008.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 99591
+    },
+    {
+      "index": 9,
+      "page": 9,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0009.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 123524
+    },
+    {
+      "index": 10,
+      "page": 10,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0010.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 77652
+    },
+    {
+      "index": 11,
+      "page": 11,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0011.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 113386
+    },
+    {
+      "index": 12,
+      "page": 12,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0012.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 84627
+    },
+    {
+      "index": 13,
+      "page": 13,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0013.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 95082
+    },
+    {
+      "index": 14,
+      "page": 14,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0014.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 110843
+    },
+    {
+      "index": 15,
+      "page": 15,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0015.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 95273
+    },
+    {
+      "index": 16,
+      "page": 16,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0016.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 82106
+    },
+    {
+      "index": 17,
+      "page": 17,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0017.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 83166
+    },
+    {
+      "index": 18,
+      "page": 18,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0018.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 90654
+    },
+    {
+      "index": 19,
+      "page": 19,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0019.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 143630
+    },
+    {
+      "index": 20,
+      "page": 20,
+      "path": "D:\\pythondm\\深度学习\\code\\07-report\\preview-v1\\page-0020.png",
+      "width": 1600,
+      "height": 901,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720.0666666666667
+      },
+      "byteLength": 174863
+    }
+  ],
+  "missingFonts": []
+}

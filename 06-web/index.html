@@ -1,0 +1,2462 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>广告素材合规审核工作台</title>
+<style>
+/* ============================================================
+   设计令牌（严格按 .superdesign/design-system.md）
+   ============================================================ */
+:root{
+  --bg-canvas:#070B14; --bg-panel:#0E1626; --bg-panel-2:#131F35; --bg-inset:#0A1120;
+  --border:#1E2C46; --border-strong:#2A3B5C; --grid-line:rgba(56,189,248,.06);
+  --text-primary:#E8EFF9; --text-secondary:#9FB0C9; --text-tertiary:#6B7C96; --text-inverse:#04120C;
+  --accent:#2DE1A8; --accent-soft:rgba(45,225,168,.14); --accent-2:#38BDF8;
+  --warn:#F5A524; --warn-soft:rgba(245,165,36,.14); --danger:#F43F5E; --danger-soft:rgba(244,63,94,.14);
+  --c0:#34D399; --c1:#F5A524; --c2:#F43F5E; --c3:#A78BFA; --c4:#FB923C; --c5:#F472B6;
+  --font-ui:"Inter","HarmonyOS Sans SC","Source Han Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono","SFMono-Regular",Consolas,"Courier New",monospace;
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px;
+  --space-6:24px; --space-8:32px; --space-10:40px; --space-12:48px;
+  --radius-sm:6px; --radius-md:10px; --radius-lg:14px; --radius-pill:999px;
+  --shadow-panel:0 1px 0 rgba(255,255,255,.03) inset,0 12px 32px rgba(2,6,23,.45);
+  --shadow-glow:0 0 0 1px rgba(45,225,168,.35),0 8px 28px rgba(45,225,168,.18);
+  --shadow-focus:0 0 0 2px rgba(45,225,168,.55);
+  --ease:cubic-bezier(.4,0,.2,1); --dur-fast:120ms; --dur-base:240ms; --dur-slow:420ms;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg-canvas); color:var(--text-primary);
+  font-family:var(--font-ui); font-size:14px; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);
+  background-size:48px 48px; background-attachment:fixed;
+}
+h1,h2,h3{margin:0; font-weight:600; letter-spacing:-.01em}
+b,strong{font-weight:600}
+button,input,select,textarea{font:inherit; color:inherit}
+:focus-visible{outline:none; box-shadow:var(--shadow-focus); border-radius:var(--radius-sm)}
+.mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums}
+.muted{color:var(--text-secondary)}
+.dim{color:var(--text-tertiary)}
+
+/* ============================ 顶部状态条 ============================ */
+.topbar{
+  position:sticky; top:0; z-index:40; height:64px; display:flex; align-items:center; gap:var(--space-5);
+  padding:0 var(--space-5); background:rgba(14,22,38,.82); backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+}
+.brand{display:flex; align-items:center; gap:var(--space-3); min-width:0}
+.brand-mark{
+  width:34px;height:34px;flex:none;border-radius:var(--radius-sm);display:grid;place-items:center;
+  background:linear-gradient(140deg,var(--accent),#12A87C); color:var(--text-inverse);
+  font-weight:700; font-size:16px;
+}
+.brand-name{font-size:15px; font-weight:600; white-space:nowrap}
+.brand-sub{font-size:11px; color:var(--text-tertiary); white-space:nowrap}
+.topbar-right{margin-left:auto; display:flex; align-items:center; gap:var(--space-4); flex-wrap:wrap}
+.field-inline{display:flex; align-items:center; gap:var(--space-2); font-size:12.5px; color:var(--text-secondary)}
+select,input[type=text],input[type=number],textarea{
+  background:var(--bg-panel-2); border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:7px 10px; color:var(--text-primary); transition:border-color var(--dur-fast) var(--ease);
+}
+select:hover,input:hover,textarea:hover{border-color:var(--border-strong)}
+select:focus,input:focus,textarea:focus{border-color:var(--accent)}
+input[type=range]{width:132px; accent-color:var(--accent); background:transparent}
+
+/* 状态徽章 */
+.api-badge{
+  display:inline-flex; align-items:center; gap:6px; height:26px; padding:0 10px; font-size:12px;
+  border-radius:var(--radius-pill); background:var(--bg-panel-2); border:1px solid var(--border); white-space:nowrap;
+}
+.api-badge .dot{width:7px;height:7px;border-radius:50%;flex:none;background:var(--text-tertiary)}
+.api-badge.is-online .dot{background:var(--accent); box-shadow:0 0 8px var(--accent)}
+.api-badge.is-fallback .dot{background:var(--warn)}
+.api-badge.is-error .dot{background:var(--danger)}
+.api-badge.is-online{border-color:rgba(45,225,168,.4)}
+.api-badge.is-fallback{border-color:rgba(245,165,36,.4)}
+
+/* ============================ 按钮 ============================ */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px; height:40px; padding:0 16px;
+  border-radius:var(--radius-sm); border:1px solid transparent; font-size:13.5px; font-weight:600;
+  cursor:pointer; transition:all var(--dur-fast) var(--ease); white-space:nowrap;
+}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.5; cursor:not-allowed; transform:none}
+.btn-primary{background:var(--accent); color:var(--text-inverse)}
+.btn-primary:hover:not(:disabled){filter:brightness(1.06)}
+.btn-ghost{background:transparent; border-color:var(--border); color:var(--text-secondary)}
+.btn-ghost:hover:not(:disabled){border-color:var(--border-strong); color:var(--text-primary)}
+.btn-danger{background:transparent; border-color:rgba(244,63,94,.5); color:var(--danger)}
+.btn-danger:hover:not(:disabled){background:var(--danger-soft)}
+.btn-sm{height:28px; padding:0 10px; font-size:12px; font-weight:500}
+.btn-xs{height:24px; padding:0 8px; font-size:11.5px; font-weight:500; border-radius:4px}
+
+/* ============================ 布局 ============================ */
+.shell{display:flex; align-items:flex-start; min-height:calc(100vh - 64px)}
+.sidenav{
+  position:sticky; top:64px; width:220px; flex:none; padding:var(--space-5) var(--space-3);
+  border-right:1px solid var(--border); height:calc(100vh - 64px); overflow-y:auto;
+}
+.nav-item{
+  display:flex; align-items:center; gap:10px; width:100%; height:40px; padding:0 12px; margin-bottom:2px;
+  background:transparent; border:none; border-left:2px solid transparent; border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  color:var(--text-secondary); font-size:13.5px; cursor:pointer; text-align:left;
+  transition:all var(--dur-fast) var(--ease);
+}
+.nav-item:hover{background:rgba(255,255,255,.03); color:var(--text-primary)}
+.nav-item[aria-current="page"]{background:var(--accent-soft); border-left-color:var(--accent); color:var(--text-primary); font-weight:600}
+.nav-item svg{flex:none; opacity:.9}
+.workspace{flex:1; min-width:0; max-width:1440px; padding:var(--space-6); margin:0 auto}
+.view{display:none}
+.view.is-active{display:block; animation:viewIn var(--dur-base) var(--ease)}
+@keyframes viewIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ============================ 通用件 ============================ */
+.page-head{margin-bottom:var(--space-5)}
+.page-head h1{font-size:26px; margin-bottom:4px}
+.page-head p{margin:0; color:var(--text-secondary); font-size:13px}
+.grid{display:grid; gap:var(--space-5)}
+.cols-2{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.card{
+  background:var(--bg-panel); border:1px solid var(--border); border-radius:var(--radius-md);
+  padding:var(--space-5); box-shadow:var(--shadow-panel);
+}
+.card-head{display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-4)}
+.card-head h3{font-size:15px}
+.card-head .spacer{margin-left:auto}
+.hint{font-size:12px; color:var(--text-tertiary); margin:0}
+.note{
+  border:1px solid var(--border); border-left:3px solid var(--accent-2); border-radius:var(--radius-sm);
+  background:var(--bg-inset); padding:10px 12px; font-size:12.5px; color:var(--text-secondary);
+}
+.note.warn{border-left-color:var(--warn)}
+.note.danger{border-left-color:var(--danger)}
+.note b{color:var(--text-primary)}
+.tag{
+  display:inline-flex; align-items:center; gap:5px; height:22px; padding:0 9px; border-radius:var(--radius-pill);
+  font-size:11px; font-weight:500; letter-spacing:.02em; white-space:nowrap;
+}
+.tag .dot{width:6px;height:6px;border-radius:50%;flex:none;background:currentColor}
+.tag-neutral{background:rgba(255,255,255,.06); color:var(--text-secondary)}
+.tag-ok{background:var(--accent-soft); color:var(--accent)}
+.tag-warn{background:var(--warn-soft); color:var(--warn)}
+.tag-bad{background:var(--danger-soft); color:var(--danger)}
+.tag-info{background:rgba(56,189,248,.14); color:var(--accent-2)}
+
+/* ============================ 输入区 ============================ */
+textarea{width:100%; min-height:118px; resize:vertical; line-height:1.7; font-size:14px}
+/* 批量审核：文件上传 / 拖放区 */
+.dropzone{
+  margin-top:var(--space-3); display:flex; align-items:center; gap:var(--space-3); flex-wrap:wrap;
+  border:1px dashed var(--border-strong); border-radius:var(--radius-sm); padding:10px 14px;
+  background:var(--bg-inset); font-size:12.5px; color:var(--text-secondary);
+  transition:all var(--dur-fast) var(--ease);
+}
+.dropzone.is-over{border-color:var(--accent); background:var(--accent-soft); color:var(--text-primary)}
+.dropzone code{font-family:var(--font-mono); font-size:11.5px; color:var(--accent-2); background:none; padding:0}
+.file-chip{
+  display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 10px; border-radius:var(--radius-pill);
+  background:var(--accent-soft); color:var(--accent); font-size:11.5px;
+}
+.input-meta{display:flex; align-items:center; gap:var(--space-3); margin-top:var(--space-2); flex-wrap:wrap}
+.samples{display:flex; flex-wrap:wrap; gap:6px; margin-top:var(--space-2)}
+.chip{
+  height:26px; padding:0 10px; border-radius:var(--radius-pill); background:var(--bg-panel-2);
+  border:1px solid var(--border); color:var(--text-secondary); font-size:12px; cursor:pointer;
+  transition:all var(--dur-fast) var(--ease);
+}
+.chip:hover{border-color:var(--border-strong); color:var(--text-primary)}
+
+/* ============================ 结果卡 ============================ */
+.result{border-left:3px solid var(--border); transition:border-color var(--dur-base) var(--ease)}
+.result.has-result{animation:resultIn var(--dur-slow) var(--ease)}
+@keyframes resultIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.verdict-row{display:flex; align-items:flex-start; gap:var(--space-4); flex-wrap:wrap}
+.verdict-main{min-width:0; flex:1}
+.verdict-label{font-size:11px; letter-spacing:.06em; color:var(--text-tertiary); text-transform:uppercase}
+.verdict-class{font-size:38px; line-height:1.15; font-weight:700; margin:2px 0 6px; letter-spacing:-.02em}
+.verdict-actions{display:flex; align-items:center; gap:var(--space-2); flex-wrap:wrap}
+.conf-wrap{min-width:190px}
+.conf-value{font-family:var(--font-mono); font-size:34px; font-weight:600; line-height:1.1; font-variant-numeric:tabular-nums}
+.conf-bar{position:relative; height:6px; background:var(--bg-panel-2); border-radius:var(--radius-pill); margin-top:8px; overflow:hidden}
+.conf-fill{height:100%; border-radius:var(--radius-pill); transition:width var(--dur-slow) var(--ease)}
+.conf-mark{position:absolute; top:-4px; width:2px; height:14px; background:var(--text-primary); opacity:.85}
+.conf-scale{display:flex; justify-content:space-between; font-size:10.5px; color:var(--text-tertiary); margin-top:4px; font-family:var(--font-mono)}
+
+/* 概率条 */
+.probs{margin-top:var(--space-5); display:grid; gap:7px}
+.prob-row{display:grid; grid-template-columns:76px 1fr 62px; align-items:center; gap:10px; font-size:12.5px}
+.prob-row.top .prob-name{color:var(--text-primary); font-weight:600}
+.prob-name{color:var(--text-secondary); display:flex; align-items:center; gap:6px; overflow:hidden; white-space:nowrap}
+.prob-name .dot{width:7px;height:7px;border-radius:50%;flex:none}
+.prob-track{height:8px; background:var(--bg-panel-2); border-radius:var(--radius-pill); overflow:hidden}
+.prob-row.top .prob-track{height:10px}
+.prob-fill{height:100%; border-radius:var(--radius-pill); width:0; transition:width var(--dur-slow) var(--ease)}
+.prob-val{font-family:var(--font-mono); text-align:right; color:var(--text-secondary); font-variant-numeric:tabular-nums}
+.prob-row.top .prob-val{color:var(--text-primary)}
+.meta-row{
+  display:flex; flex-wrap:wrap; gap:var(--space-4); margin-top:var(--space-5); padding-top:var(--space-4);
+  border-top:1px solid var(--border); font-size:12px; color:var(--text-tertiary);
+}
+.meta-row span b{color:var(--text-secondary); font-weight:500}
+
+/* KPI 卡 */
+.kpi{display:flex; flex-direction:column; gap:2px}
+.kpi-k{font-size:11px; letter-spacing:.04em; color:var(--text-tertiary); text-transform:uppercase}
+.kpi-v{font-family:var(--font-mono); font-size:29px; font-weight:600; line-height:1.2; font-variant-numeric:tabular-nums}
+.kpi-v small{font-size:14px; color:var(--text-secondary); font-weight:500; margin-left:3px}
+.kpi-d{font-size:11.5px; color:var(--text-tertiary)}
+
+/* 分布条 */
+.bars{display:grid; gap:9px}
+.bar-row{display:grid; grid-template-columns:88px 1fr 96px; align-items:center; gap:10px; font-size:12.5px}
+.bar-track{height:9px; background:var(--bg-panel-2); border-radius:var(--radius-pill); overflow:hidden}
+.bar-fill{height:100%; border-radius:var(--radius-pill); transition:width var(--dur-slow) var(--ease)}
+.bar-val{font-family:var(--font-mono); text-align:right; color:var(--text-secondary); font-variant-numeric:tabular-nums}
+.bar-val em{font-style:normal; color:var(--text-tertiary); font-size:11px}
+
+/* 表格 */
+.table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius-md)}
+table{width:100%; border-collapse:collapse; font-size:12.5px}
+thead th{
+  background:var(--bg-panel-2); color:var(--text-tertiary); font-size:10.5px; font-weight:500;
+  letter-spacing:.05em; text-transform:uppercase; text-align:left; padding:9px 12px; white-space:nowrap;
+  border-bottom:1px solid var(--border);
+}
+tbody td{padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:middle}
+tbody tr:nth-child(even){background:var(--bg-inset)}
+tbody tr:hover{background:var(--accent-soft)}
+tbody tr:last-child td{border-bottom:none}
+td.num,th.num{text-align:right; font-family:var(--font-mono); font-variant-numeric:tabular-nums}
+.cm td.cell{text-align:center; font-family:var(--font-mono); font-variant-numeric:tabular-nums; padding:6px 8px}
+.cm td.hit{background:rgba(52,211,153,.14); color:var(--c0); font-weight:600}
+.cm td.miss{background:rgba(244,63,94,.14); color:var(--c2); font-weight:600}
+.cm td.zero{color:var(--text-tertiary)}
+.cm td.rowh{color:var(--text-primary); font-weight:500; white-space:nowrap}
+.scroll-y{max-height:340px; overflow-y:auto}
+
+/* 代码块 */
+pre{
+  margin:0; background:var(--bg-inset); border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:12px 14px; overflow-x:auto; font-family:var(--font-mono); font-size:12.5px; line-height:1.65;
+  color:#CFE0F5;
+}
+.code-head{display:flex; align-items:center; gap:var(--space-3); margin-bottom:6px}
+.code-head .p{font-family:var(--font-mono); font-size:12px; color:var(--accent-2)}
+.code-head .spacer{margin-left:auto}
+
+/* 设置浮层 */
+.pop{
+  position:fixed; top:70px; right:var(--space-5); z-index:50; width:380px; max-width:calc(100vw - 40px);
+  background:var(--bg-panel); border:1px solid var(--border-strong); border-radius:var(--radius-md);
+  box-shadow:0 20px 48px rgba(2,6,23,.6); padding:var(--space-5);
+}
+.pop h3{font-size:14px; margin-bottom:var(--space-4)}
+.pop-row{display:grid; grid-template-columns:1fr; gap:6px; margin-bottom:var(--space-3)}
+.pop-row label{font-size:12px; color:var(--text-secondary); display:flex; align-items:center; gap:8px}
+.pop-row input[type=text]{width:100%; font-family:var(--font-mono); font-size:12px}
+.pop-actions{display:flex; gap:var(--space-2); margin-top:var(--space-4)}
+.switch{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-secondary); cursor:pointer}
+.switch input{accent-color:var(--accent); width:16px; height:16px}
+
+/* 批量工具栏 */
+.toolbar{display:flex; align-items:center; gap:var(--space-3); flex-wrap:wrap; margin-bottom:var(--space-4)}
+.toolbar .spacer{margin-left:auto}
+.seg{display:inline-flex; background:var(--bg-panel-2); border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden}
+.seg button{
+  background:transparent; border:none; padding:6px 12px; font-size:12px; color:var(--text-secondary); cursor:pointer;
+  transition:all var(--dur-fast) var(--ease);
+}
+.seg button:hover{color:var(--text-primary)}
+.seg button[aria-pressed="true"]{background:var(--accent-soft); color:var(--accent); font-weight:600}
+.progress{height:4px; background:var(--bg-panel-2); border-radius:var(--radius-pill); overflow:hidden; margin-bottom:var(--space-3)}
+.progress i{display:block; height:100%; width:0; background:var(--accent); transition:width var(--dur-base) var(--ease)}
+
+/* 历史 */
+.history{display:grid; gap:8px}
+.hist-item{
+  width:100%; text-align:left; background:var(--bg-inset); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:9px 11px; cursor:pointer; transition:all var(--dur-fast) var(--ease);
+}
+.hist-item:hover{border-color:var(--border-strong); background:var(--bg-panel-2)}
+.hist-top{display:flex; align-items:center; gap:8px; margin-bottom:3px}
+.hist-text{font-size:12px; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.empty{color:var(--text-tertiary); font-size:12.5px; text-align:center; padding:var(--space-6) 0}
+
+/* Toast */
+.toast-host{position:fixed; bottom:var(--space-5); right:var(--space-5); z-index:60; display:grid; gap:8px; width:340px; max-width:calc(100vw - 40px); pointer-events:none}
+.toast{
+  background:var(--bg-panel-2); border:1px solid var(--border); border-left:3px solid var(--accent);
+  border-radius:var(--radius-sm); padding:10px 12px; font-size:12.5px; color:var(--text-secondary);
+  box-shadow:var(--shadow-panel); animation:viewIn var(--dur-base) var(--ease);
+}
+.toast.warn{border-left-color:var(--warn)}
+.toast.bad{border-left-color:var(--danger)}
+.toast b{color:var(--text-primary)}
+
+footer.page-foot{
+  margin-top:var(--space-8); padding-top:var(--space-5); border-top:1px solid var(--border);
+  font-size:11.5px; color:var(--text-tertiary);
+}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+@media (max-width:1280px){
+  .cols-2{grid-template-columns:1fr}
+  .cols-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:1024px){
+  .sidenav{width:60px; padding:var(--space-4) 6px}
+  .nav-item span{display:none}
+  .nav-item{justify-content:center; padding:0}
+  .cols-3{grid-template-columns:1fr}
+}
+@media (max-width:768px){
+  .topbar{height:auto; flex-wrap:wrap; padding:var(--space-3) var(--space-4)}
+  .shell{flex-direction:column}
+  .sidenav{position:static; width:100%; height:auto; display:flex; overflow-x:auto; border-right:none; border-bottom:1px solid var(--border)}
+  .cols-4{grid-template-columns:1fr}
+  .workspace{padding:var(--space-4)}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important; transition-property:opacity !important}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">合</div>
+    <div>
+      <div class="brand-name">广告素材合规审核工作台</div>
+      <div class="brand-sub">中文短文本六分类 · 置信度拒判 · 取代 Streamlit 演示页</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <label class="field-inline">
+      <span>模型路线</span>
+      <select id="routeSelect" aria-label="选择模型路线"></select>
+    </label>
+    <label class="field-inline">
+      <span>阈值 <b class="mono" id="thresholdLabel">60.0%</b></span>
+      <input type="range" id="thresholdRange" min="0" max="95" step="5" value="60" aria-label="置信度阈值">
+    </label>
+    <span class="api-badge" id="apiBadge"><i class="dot"></i><span id="apiBadgeText">未检测</span></span>
+    <button class="btn btn-ghost btn-sm" id="settingsBtn" aria-expanded="false">设置</button>
+  </div>
+</header>
+
+<div class="pop" id="settingsPop" hidden>
+  <h3>接口与运行设置</h3>
+  <div class="pop-row">
+    <label>BERT 服务地址<input type="text" id="base-bert" spellcheck="false"></label>
+  </div>
+  <div class="pop-row">
+    <label>随机森林服务地址<input type="text" id="base-rf" spellcheck="false"></label>
+  </div>
+  <div class="pop-row">
+    <label>fastText 服务地址<input type="text" id="base-fasttext" spellcheck="false"></label>
+  </div>
+  <div class="pop-row">
+    <label>大模型服务地址<input type="text" id="base-llm" spellcheck="false"></label>
+  </div>
+  <label class="switch"><input type="checkbox" id="forceOffline"> 强制离线兜底（不请求后端）</label>
+  <p class="hint" style="margin-top:10px">阈值默认 60.0%，与 <code>04_Bett/config.py</code> 的 <code>conf_threshold</code> 保持一致；但前端滑块只影响本页面的处置判断，不会改动后端配置。</p>
+  <div class="pop-actions">
+    <button class="btn btn-primary btn-sm" id="settingsSave">保存</button>
+    <button class="btn btn-ghost btn-sm" id="settingsReset">恢复默认</button>
+    <button class="btn btn-ghost btn-sm" id="settingsClose" style="margin-left:auto">关闭</button>
+  </div>
+</div>
+
+<div class="shell">
+  <nav class="sidenav" aria-label="主导航">
+    <button class="nav-item" data-view="review" aria-current="page">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      <span>审核工作台</span>
+    </button>
+    <button class="nav-item" data-view="batch">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+      <span>批量审核</span>
+    </button>
+    <button class="nav-item" data-view="records">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+      <span>审核记录</span>
+    </button>
+    <button class="nav-item" data-view="metrics">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l3-4 3 3 5-7"/></svg>
+      <span>指标看板</span>
+    </button>
+    <button class="nav-item" data-view="compare">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      <span>方案对比</span>
+    </button>
+    <button class="nav-item" data-view="api">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
+      <span>接口与部署</span>
+    </button>
+  </nav>
+
+  <main class="workspace">
+
+    <!-- ==================== 1. 审核工作台 ==================== -->
+    <section class="view is-active" id="view-review">
+      <div class="page-head">
+        <h1>审核工作台</h1>
+        <p>输入一段广告文案，得到类别判定、置信度与处置建议；低于阈值自动转人工复核。</p>
+      </div>
+
+      <div id="offlineBanner"></div>
+
+      <div class="grid cols-2">
+        <div class="grid" style="gap:var(--space-5)">
+          <div class="card">
+            <div class="card-head">
+              <h3>待审文案</h3>
+              <span class="tag tag-neutral" id="routeTag">—</span>
+              <div class="spacer"></div>
+              <button class="btn btn-ghost btn-xs" id="clearInput">清空</button>
+            </div>
+            <label class="sr" for="reviewText">待审文案</label>
+            <textarea id="reviewText" placeholder="粘贴或输入广告文案，例如：加我微信，日赚500，操作简单，秒到账，名额有限"></textarea>
+            <div class="input-meta">
+              <span class="hint"><b class="mono" id="charCount">0</b> 字 · 中位数 17 字 / 均值 37.5 字（实验数据）</span>
+              <div class="spacer" style="margin-left:auto"></div>
+              <button class="btn btn-primary" id="submitReview">开始审核</button>
+            </div>
+            <div class="samples" id="sampleChips"></div>
+          </div>
+
+          <div class="card result" id="resultCard">
+            <div class="card-head">
+              <h3>审核结论</h3>
+              <div class="spacer"></div>
+              <span class="hint" id="resultSourceHint">尚未提交</span>
+            </div>
+            <div id="resultBody">
+              <p class="empty">提交一条文案后，这里会显示类别判定、置信度与处置建议。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid" style="gap:var(--space-5)">
+          <div class="card">
+            <div class="card-head">
+              <h3>处置分流</h3>
+              <div class="spacer"></div>
+              <span class="tag tag-info" id="thresholdTag">阈值 60.0%</span>
+            </div>
+            <div id="thresholdPanel"></div>
+            <p class="hint" style="margin-top:12px">三个数字为实验报告实测工作点，滑块在其他位置时按线性插值给出估计值。</p>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h3>最近审核记录</h3>
+              <div class="spacer"></div>
+              <button class="btn btn-ghost btn-xs" id="clearHistory">清空</button>
+            </div>
+            <div class="history" id="historyList"><p class="empty">暂无记录</p></div>
+          </div>
+
+          <div class="note warn" id="offlineNote">
+            <b>离线兜底已开启的说明：</b>接口不可用时，本页用内置规则给出演示结果，并在结论里明确标注「内置规则 · 非模型推理」，不会伪装成模型输出。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 2. 批量审核 ==================== -->
+    <section class="view" id="view-batch">
+      <div class="page-head">
+        <h1>批量审核</h1>
+        <p>粘贴文本或上传文件，一行一条；「文案⇥标签」两列时会顺便算出与标签的一致率。<b>审核结果会自动写入「审核记录」页</b>，阈值与顶部滑块联动。</p>
+      </div>
+
+      <div class="grid cols-2">
+        <div class="card">
+          <div class="card-head">
+            <h3>批量输入</h3>
+            <div class="spacer"></div>
+            <button class="btn btn-ghost btn-xs" id="batchFill">填入示例</button>
+            <button class="btn btn-ghost btn-xs" id="batchClear">清空</button>
+          </div>
+          <textarea id="batchText" style="min-height:230px" placeholder="每行一条广告文案…"></textarea>
+          <div class="dropzone" id="batchDrop">
+            <input type="file" id="batchFile" accept=".txt,.csv,.tsv,.json,.log" hidden>
+            <span>把文件拖到这里，或</span>
+            <button class="btn btn-ghost btn-xs" id="batchFileBtn" type="button">选择文件</button>
+            <span class="hint">支持 <code>.txt</code> / <code>.csv</code> / <code>.tsv</code> / <code>.json</code>；自动识别 UTF-8 与 GBK；若文件是「文案⇥标签」两列，会顺便算出与标签的一致率</span>
+          </div>
+          <div class="hint" id="batchFileInfo" style="margin-top:6px"></div>
+          <div class="toolbar" style="margin-top:var(--space-3); margin-bottom:0">
+            <span class="hint">已解析 <b class="mono" id="batchCount">0</b> 条</span>
+            <div class="spacer"></div>
+            <button class="btn btn-primary" id="batchRun">开始批量审核</button>
+            <button class="btn btn-ghost" id="batchExport" disabled>导出 CSV</button>
+          </div>
+          <div class="progress" id="batchProgress" hidden><i></i></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>分流汇总</h3></div>
+          <div id="batchSummary"><p class="empty">运行后显示分流统计</p></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:var(--space-5)">
+        <div class="toolbar">
+          <div class="seg" id="batchFilter" role="group" aria-label="按处置筛选">
+            <button data-filter="all" aria-pressed="true">全部</button>
+            <button data-filter="auto-pass" aria-pressed="false">自动通过</button>
+            <button data-filter="auto-block" aria-pressed="false">自动拦截</button>
+            <button data-filter="review" aria-pressed="false">转人工复核</button>
+          </div>
+          <div class="spacer"></div>
+          <label class="field-inline"><span>排序</span>
+            <select id="batchSort">
+              <option value="index">按原顺序</option>
+              <option value="conf-desc">置信度 高→低</option>
+              <option value="conf-asc">置信度 低→高</option>
+            </select>
+          </label>
+        </div>
+        <div class="table-wrap scroll-y">
+          <table id="batchTable">
+            <thead><tr>
+              <th class="num" style="width:52px">#</th><th>文案</th><th style="width:100px">判定类别</th>
+              <th class="num" style="width:84px">置信度</th><th style="width:104px">处置</th><th style="width:96px">原标签</th>
+            </tr></thead>
+            <tbody id="batchBody"><tr><td colspan="5"><p class="empty">暂无数据</p></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 3. 审核记录 ==================== -->
+    <section class="view" id="view-records">
+      <div class="page-head">
+        <h1>审核记录</h1>
+        <p>每一次审核的状态都记在这里：判定类别、置信度、处置与结果来源。<b>处置按当前阈值实时重算</b> —— 拖动顶部滑块，历史结论会一起变。</p>
+      </div>
+
+      <div class="grid cols-4" id="recKpis"></div>
+
+      <div class="card" style="margin-top:var(--space-5)">
+        <div class="toolbar">
+          <div class="seg" id="recFilter" role="group" aria-label="按处置筛选">
+            <button data-filter="all" aria-pressed="true">全部</button>
+            <button data-filter="auto-pass" aria-pressed="false">自动通过</button>
+            <button data-filter="auto-block" aria-pressed="false">自动拦截</button>
+            <button data-filter="review" aria-pressed="false">转人工复核</button>
+          </div>
+          <label class="field-inline"><span>路线</span>
+            <select id="recRoute"><option value="all">全部路线</option></select>
+          </label>
+          <label class="field-inline"><span>方式</span>
+            <select id="recOrigin">
+              <option value="all">全部方式</option>
+              <option value="single">单条审核</option>
+              <option value="batch">批量审核</option>
+            </select>
+          </label>
+          <label class="field-inline"><span>来源</span>
+            <select id="recSource">
+              <option value="all">全部来源</option>
+              <option value="api">真实接口</option>
+              <option value="offline">内置规则</option>
+            </select>
+          </label>
+          <div class="spacer"></div>
+          <button class="btn btn-ghost btn-sm" id="recExport">导出 CSV</button>
+          <button class="btn btn-danger btn-sm" id="recClear">清空记录</button>
+        </div>
+        <div class="table-wrap scroll-y">
+          <table>
+            <thead><tr>
+              <th style="width:158px">时间</th><th style="width:86px">路线</th><th style="width:140px">方式</th><th>文案</th>
+              <th style="width:106px">判定类别</th><th class="num" style="width:82px">置信度</th>
+              <th style="width:106px">处置</th><th style="width:92px">来源</th>
+            </tr></thead>
+            <tbody id="recBody"><tr><td colspan="8"><p class="empty">暂无审核记录</p></td></tr></tbody>
+          </table>
+        </div>
+        <p class="hint" style="margin-top:10px"><b>单条审核与批量审核的结果都会写入这里。</b>记录保存在浏览器本地（localStorage），刷新页面不丢；上限 1000 条（超出时最早的被丢弃）。点任意一行可把该条文案回填到审核工作台。</p>
+      </div>
+    </section>
+
+    <!-- ==================== 4. 指标看板 ==================== -->
+    <section class="view" id="view-metrics">
+      <div class="page-head">
+        <h1>指标看板</h1>
+        <p>数据集与模型效果的真实统计。<b>所有数字都标注口径</b>——这是本项目文档里最容易搞混的地方。</p>
+      </div>
+
+      <div class="grid cols-4" id="kpiGrid"></div>
+
+      <div class="grid cols-2" style="margin-top:var(--space-5)">
+        <div class="card">
+          <div class="card-head"><h3>六类样本占比</h3><div class="spacer"></div><span class="hint">全量 9503 条</span></div>
+          <div class="bars" id="classDist"></div>
+          <div class="meta-row">
+            <span><b>不平衡比</b> 2.02 : 1</span>
+            <span><b>切分</b> train 7600 / dev 947 / test 956（按类分层 8:1:1）</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>类别加权：收益与代价</h3><div class="spacer"></div><span class="hint">加权损失 √(N/(K·count))</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>类别</th><th class="num">F1 基线</th><th class="num">F1 加权</th><th class="num">召回 加权</th><th>评价</th></tr></thead>
+              <tbody id="weightTable"></tbody>
+            </table>
+          </div>
+          <div class="note" style="margin-top:var(--space-4)">
+            <b>业务判断：</b>审核场景漏放欺诈的代价远高于多审几条低俗色情，这笔交换划算。但约一半误判属于「标注边界模糊」（「上岸」「打米」「七位数」是博彩黑话），加权只能救回样本不均衡的部分。
+          </div>
+        </div>
+      </div>
+
+      <div class="grid cols-2" style="margin-top:var(--space-5)">
+        <div class="card">
+          <div class="card-head"><h3>混淆矩阵</h3><div class="spacer"></div><span class="hint">测试集 956 条</span></div>
+          <div class="table-wrap cm">
+            <table>
+              <thead><tr><th>真实 \ 预测</th><th class="num">不违规</th><th class="num">黑产</th><th class="num">欺诈</th><th class="num">博彩</th><th class="num">谩骂</th><th class="num">低俗</th></tr></thead>
+              <tbody id="confusionBody"></tbody>
+            </table>
+          </div>
+          <p class="hint" style="margin-top:10px">绿=判对，红=主要混淆源。<b>最刺眼的是谩骂引战 → 低俗色情 24 条</b>：辱骂文本常带性羞辱词，两类语义天然交叠。</p>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>置信度阈值拒判</h3><div class="spacer"></div><span class="hint">业务驱动的改进</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th class="num">阈值</th><th class="num">自动判定占比</th><th class="num">自动判定准确率</th><th class="num">违规召回</th><th>说明</th></tr></thead>
+              <tbody id="thresholdTable"></tbody>
+            </table>
+          </div>
+          <p class="hint" style="margin-top:10px">原架构 argmax 永远硬判一类，但真实审核中「没把握」本身是合法答案：softmax 最高置信度低于阈值即转人工。阈值 0.60 时 4% 流量进人工，自动判定准确率 +1.8 个点。</p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:var(--space-5)">
+        <div class="card-head"><h3>数据说明与口径纠正</h3></div>
+        <div class="grid cols-3">
+          <div class="note"><b>来源</b><br>zjunlp/ChineseHarm-bench（HuggingFace），转换为 <code>文本\t标签</code> 契约。</div>
+          <div class="note"><b>清洗策略</b><br>空白符归一（\t\r\n → 空格）→ 长度 &lt; 2 丢弃 → 完全重复去重 → 标签冲突样本整条丢弃 → 按类别分层抽样。</div>
+          <div class="note"><b>长度依据</b><br>实测中位数 17 字、均值 37.5 字、p95 129 字 → <code>max_len=64</code>。注意 <code>config.py</code> 注释里的「中位数 19 / 均值 42」是陈旧文档值。</div>
+        </div>
+        <div class="note danger" style="margin-top:var(--space-4)">
+          <b>README 的口径错误（务必在汇报时纠正）：</b>README 第 3.1 节写「BERT 微调（最终）准确率 0.9331 / Macro-F1 0.934」，但 0.9331 其实是 <code>train_results.json</code> 里的 <b>val_f1（macro-F1）</b>，不是准确率（同文件末轮 val_acc = 0.9311）；而且那两条来自 <b>dev 验证集（947 条）</b>，不是测试集。本页统一采用<b>实验报告口径：accuracy 0.9310 / macro-F1 0.9343</b>。
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 4. 方案对比 ==================== -->
+    <section class="view" id="view-compare">
+      <div class="page-head">
+        <h1>方案对比</h1>
+        <p>四条技术路线横向对比，以及 BERT 路线的三种压缩手段取舍。</p>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>四方案横向对比</h3><div class="spacer"></div><span class="hint">数值来自 04_Bett/实验报告</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>方案</th><th>关键配置</th><th class="num">accuracy</th><th class="num">macro-F1</th><th class="num">单条推理 (CPU)</th><th>口径与说明</th></tr></thead>
+            <tbody id="schemeTable"></tbody>
+          </table>
+        </div>
+        <div class="note" style="margin-top:var(--space-4)">
+          <b>结论：</b>BERT 加权比 fastText 字级高约 2.6 个点 F1，但推理慢百倍。误判代价高的场景最终选 BERT，并采用「量化版粗筛 + 原始版复核」的分层部署思路。
+        </div>
+      </div>
+
+      <div class="grid cols-2" style="margin-top:var(--space-5)">
+        <div class="card">
+          <div class="card-head"><h3>压缩后体积</h3><div class="spacer"></div><span class="hint">实测存盘大小</span></div>
+          <div class="bars" id="sizeBars"></div>
+          <p class="hint" style="margin-top:12px">模型前向延迟在同一口径下：原始 <b class="mono">5.19ms</b> → 蒸馏 Student <b class="mono">1.68ms</b>（3.08×）。</p>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>压缩后精度</h3><div class="spacer"></div><span class="hint">macro-F1</span></div>
+          <div class="bars" id="f1Bars"></div>
+          <div class="note warn" style="margin-top:var(--space-4)">
+            <b>非结构化剪枝省的是「体积」，不是「速度」：</b>50% 稀疏度下存盘体积一点没变（390.2MB），因为权重只是被置 0，float32 稠密格式里 0 和其它数占一样大；收益要到 gzip 后才显现（362.3 → 244.3MB）。
+          </div>
+        </div>
+      </div>
+
+      <div class="grid cols-2" style="margin-top:var(--space-5)">
+        <div class="card">
+          <div class="card-head"><h3>知识蒸馏：alpha 消融</h3><div class="spacer"></div><span class="hint">Teacher 12 层 → Student 4 层</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>配置</th><th class="num">accuracy</th><th class="num">macro-F1</th><th class="num">欺诈召回</th></tr></thead>
+              <tbody>
+                <tr><td>alpha=0.5, 3 epochs</td><td class="num">0.9153</td><td class="num">0.9133</td><td class="num" style="color:var(--warn)">0.77</td></tr>
+                <tr><td><b>alpha=0.7, 5 epochs（最终采用）</b></td><td class="num" style="color:var(--accent)">0.9247</td><td class="num" style="color:var(--accent)">0.9230</td><td class="num" style="color:var(--accent)">0.83</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="note warn" style="margin-top:var(--space-4)">
+            <b>踩过的坑：alpha 别照抄论文的 0.5。</b>软损失 KL 本身不带类别权重，它占一半话语权时会把少数类判别拉平——上一步类别加权换来的欺诈召回（0.94）直接掉回 0.77。提到 0.7 后硬损失重新主导，召回回到 0.83。
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>剪枝：稀疏度阶梯</h3><div class="spacer"></div><span class="hint">验证集，挑选精度/体积平衡点</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th class="num">目标稀疏度</th><th class="num">实际稀疏度</th><th class="num">val_acc</th><th class="num">val_f1</th></tr></thead>
+              <tbody>
+                <tr><td class="num">17%</td><td class="num">16.67%</td><td class="num">0.9407</td><td class="num">0.9414</td></tr>
+                <tr><td class="num">33%</td><td class="num">33.33%</td><td class="num">0.9322</td><td class="num">0.9330</td></tr>
+                <tr><td class="num">50%</td><td class="num">50.00%</td><td class="num">0.9396</td><td class="num">0.9390</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="note" style="margin-top:var(--space-4)">
+            未剪枝基线 val F1 为 <b class="mono">0.9441</b>。<b>剪掉一半权重，验证 F1 只掉 0.5 个点</b>——说明这个 12 层模型在广告审核任务上明显过参数化、冗余度很高。曲线非单调（33% 反而最低）是因为每步只微调 1 轮，修复程度不同。
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:var(--space-5)">
+        <div class="card-head"><h3>口径与陷阱（汇报时容易被追问的点）</h3></div>
+        <div class="grid cols-3">
+          <div class="note warn"><b>RF 用了不同切分</b><br>实验报告注明随机森林使用「自带 8:2 切分」，与其它方案的统一测试集不同源，因此 0.784 / 0.780 不能直接横向比较。</div>
+          <div class="note warn"><b>延迟有三个口径</b><br>模型前向 5.19ms（脚本内 100 次平均）／CPU 端到端 103ms（四方案表）／CPU 单条 63.6ms（剪枝表）。同一份报告里就有两个 CPU 数字，汇报时应指明取自哪张表。</div>
+          <div class="note warn"><b>剪枝的 CPU 数字自相矛盾</b><br>剪枝表记录原始 63.6ms、剪枝后 49.7ms（看起来更快），但正文说明非结构化剪枝在稠密算子上不应期待加速。合理判断是测量波动，而不是真实加速。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 5. 接口与部署 ==================== -->
+    <section class="view" id="view-api">
+      <div class="page-head">
+        <h1>接口与部署</h1>
+        <p>四条路线都是 <code>POST /predict</code> 的 JSON 接口。<b>字段并不统一</b>，前端已做兼容归一。</p>
+      </div>
+
+      <div class="note danger">
+                <b>端口已重新分配（原设计有个坑）：</b>三条路线原本都用 <code>6000</code>，这会同时踩两个问题——① 三个服务互相抢端口，同一时间只能起一个；② <b><code>6000</code> 在 Chromium（Chrome / Edge）的受限端口名单里，浏览器会直接拒绝连接并报 <code>ERR_UNSAFE_PORT</code></b>，前端页面永远连不上，而 <code>curl</code> 不检查该名单，所以命令行测试会「看起来一切正常」。现已改为：BERT <code>8000</code> / 随机森林 <code>8001</code> / fastText <code>8002</code>，大模型仍为 <code>5002</code> —— 互不冲突且都可被浏览器访问。
+      </div>
+
+      <div class="grid cols-2" style="margin-top:var(--space-5)" id="apiCards"></div>
+
+      <div class="card" style="margin-top:var(--space-5)">
+        <div class="card-head"><h3>启动方式</h3></div>
+        <div class="grid cols-2">
+          <div>
+            <div class="code-head"><span class="p">四条路线的启动命令（权重均已就绪）</span></div>
+            <pre># 四条路线各开一个终端窗口，分别执行（端口互不冲突，可同时启动）
+# BERT      :8000    先 cd 04_Bett      再 python api_flask_server.py
+# 随机森林   :8001    先 cd 02-rf        再 python api_flask_server.py
+# fastText  :8002    先 cd 03-fasttext  再 python api_flask_server.py
+# 大模型     :5002    先 cd 05-LLM       再 python api_flask_server.py
+
+# 权重如需重新生成：
+# BERT      cd 04_Bett      python bert_train.py              → bert_model.pth
+# 随机森林   cd 02-rf        python rf_train.py                → rf_model.pkl
+# fastText  cd 03-fasttext  python fasttext_char_default.py   → ft_model_char_1.bin</pre>
+          </div>
+          <div>
+            <div class="code-head"><span class="p">打开本工作台</span></div>
+            <pre># 首选：直接访问服务根路径（同源，无跨域预检）
+http://127.0.0.1:8000/
+
+# 也可以双击 06-web/index.html 离线打开
+# （纯静态单文件，无构建、无依赖，断网可用）</pre>
+          </div>
+        </div>
+        <div class="note warn" style="margin-top:var(--space-4)">
+          <b>跨域（CORS）说明：</b>用 <code>file://</code> 打开的页面访问 <code>http://127.0.0.1:8000</code> 属于跨域请求，浏览器会先发 <code>OPTIONS</code> 预检。原始 <code>api_flask_server.py</code> 只允许 <code>POST</code> 且不返回 CORS 头，因此真实接口调用会被浏览器拦截。已为四个服务加上最小化 CORS 支持（不引入新依赖）；如果拦截仍在，页面会自动回退到离线兜底并明确提示。
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:var(--space-5)">
+        <div class="card-head"><h3>前端如何兼容四套字段</h3></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>字段</th><th>RF</th><th>fastText</th><th>BERT</th><th>大模型</th><th>前端处理</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">text</td><td>✓ 回显</td><td>✓ 回显</td><td>✓ 回显</td><td>✓ 回显</td><td>忽略，以输入框为准</td></tr>
+              <tr><td class="mono">pred_class</td><td>✓ <b>7 值</b></td><td>✓ <b>7 值</b></td><td>✓ <b>7 值</b></td><td>✓ <b>7 值</b></td><td>识别第 7 值「需人工复核」，单独渲染</td></tr>
+              <tr><td class="mono">raw_class</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>转人工时用它显示模型原判 / 模型倾向</td></tr>
+              <tr><td class="mono">confidence</td><td>✓ 投票比例</td><td>✓ 归一化得分</td><td>✓ softmax</td><td>✓ <b>自报分数</b></td><td>四者尺度不同、<b>不可横向比较</b>；缺失时显示「该路线不返回置信度」</td></tr>
+              <tr><td class="mono">need_review</td><td>✓ bool</td><td>✓ bool</td><td>✓ bool</td><td>✓ bool</td><td>缺失时按字符串或阈值推断，并标注推断来源</td></tr>
+              <tr><td class="mono">probs</td><td>✓ 长度 6</td><td>✓ 长度 6</td><td>✓ 长度 6</td><td>✓ 长度 6 <b>自报</b></td><td>四条路线都能画概率条；大模型是自报分数、未校准，只能看相对大小</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <footer class="page-foot">
+        模型输出仅供参考，不构成法律意见，也不应作为唯一的合规判定依据。实际投放请以监管部门要求和法务审核为准。
+      </footer>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast-host" id="toastHost" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   1. 常量与真实数据（全部来自仓库实测与 04_Bett/实验报告.html）
+   ============================================================ */
+const CLASSES = [
+  { id:0, name:'不违规',   color:'var(--c0)', hex:'#34D399' },
+  { id:1, name:'黑产广告', color:'var(--c1)', hex:'#F5A524' },
+  { id:2, name:'欺诈',     color:'var(--c2)', hex:'#F43F5E' },
+  { id:3, name:'博彩',     color:'var(--c3)', hex:'#A78BFA' },
+  { id:4, name:'谩骂引战', color:'var(--c4)', hex:'#FB923C' },
+  { id:5, name:'低俗色情', color:'var(--c5)', hex:'#F472B6' }
+];
+const REVIEW_LABEL = '需人工复核';
+const CLASS_INDEX = {};
+CLASSES.forEach(function(c){ CLASS_INDEX[c.name] = c; });
+function classByName(name){ return CLASS_INDEX[name] || null; }
+function classColor(name){ const c = CLASS_INDEX[name]; return c ? c.hex : '#6B7C96'; }
+
+const ROUTES = {
+  bert: {
+    key:'bert', label:'BERT 微调 + 类别加权', short:'BERT',
+    file:'04_Bett/api_flask_server.py', predict:'04_Bett/bert_predict_fun.py',
+    port:8000, defaultBase:'http://127.0.0.1:8000',
+    availability:'ready',
+    availabilityText:'权重齐备，可直接启动',
+    fields:'text / pred_class / raw_class / confidence / need_review / probs',
+    hasConfidence:true, hasReviewFlag:true,
+    note:'最终采用的路线。置信度低于 conf_threshold(0.60) 时把 pred_class 替换为「需人工复核」，原判保留在 raw_class。已额外返回六类 probs，所以概率条是真实分布而非近似。',
+    kpi:{ acc:'0.9310', f1:'0.9343', size:'390.2MB' }
+  },
+  rf: {
+    key:'rf', label:'随机森林 + TF-IDF', short:'RF',
+    file:'02-rf/api_flask_server.py', predict:'02-rf/rf_predic_fun.py',
+    port:8001, defaultBase:'http://127.0.0.1:8001',
+    availability:'ready',
+    availabilityText:'权重已生成，可直接启动',
+    fields:'text / pred_class / raw_class / confidence / need_review / probs',
+    hasConfidence:true, hasReviewFlag:true,
+    note:'已补齐六类概率与置信度拒判（predict_proba）。实测它的置信度偏保守：「蠢猪」0.42、「代办证件」0.58、「彩票」0.54 都低于 0.60 阈值 → 三条全部转人工；只有「今天天气不错」0.83 自动判定（但类别判错了，属于"自信地判错"）。注意随机森林的概率是 200 棵树投票比例，与 BERT 的 softmax 尺度不同，阈值必须分别标定。',
+    kpi:{ acc:'0.784', f1:'0.780', size:'85MB' }
+  },
+  fasttext: {
+    key:'fasttext', label:'fastText（字级）', short:'fastText',
+    file:'03-fasttext/api_flask_server.py', predict:'03-fasttext/fasttext_predict_fun.py',
+    port:8002, defaultBase:'http://127.0.0.1:8002',
+    availability:'ready',
+    availabilityText:'权重已生成，可直接启动',
+    fields:'text / pred_class / raw_class / confidence / need_review / probs',
+    hasConfidence:true, hasReviewFlag:true,
+    note:'已补齐六类概率与拒判（model.predict(k=6)）。实测概率极度饱和：「蠢猪」1.000、「彩票」1.000、「代办证件」0.978，几乎都远高于 0.60 阈值 → 阈值分流对它基本失效，这是 fastText 典型的过度自信。类别上「代办证件」→黑产广告、「彩票」→博彩 都对，但「今天天气不错」仍被判成低俗色情（0.81，自信地判错）。概率尺度与 BERT、RF 都不同，阈值需分别标定。',
+    kpi:{ acc:'—', f1:'0.908', size:'244.7MB' }
+  },
+  llm: {
+    key:'llm', label:'大模型（DeepSeek）', short:'LLM',
+    file:'05-LLM/api_flask_server.py', predict:'05-LLM/deepseek_predict_fun.py',
+    port:5002, defaultBase:'http://127.0.0.1:5002',
+    availability:'ready',
+    availabilityText:'可用（需联网 + API Key）',
+    fields:'text / pred_class / raw_class / confidence / need_review / probs',
+    hasConfidence:true, hasReviewFlag:true,
+    note:'端口 5002。已让模型按 JSON 输出六类分数（提示词里的 Output Format），所以它现在也有 probs 与置信度拒判。<b>⚠️ 但这是模型自报的分数、未经校准</b>，与 BERT 的 softmax、随机森林的投票比例都不是一回事，数值不能横向比较。实测：「代办证件」→ 黑产广告 0.72（欺诈 0.20，与 BERT 的混淆方向一致）、「蠢猪」→ 谩骂引战 0.90、「今天天气不错」→ 不违规 0.95；输入「好」这类过短文本时给出接近均分的分布（0.25 + 0.15×5）并转人工 —— 提示词里的弃权规则确实生效了。Key 读自 05-LLM/.env。每次请求都要联网调云端，比本地模型慢且计费。',
+    kpi:{ acc:'—', f1:'—', size:'—' }
+  }
+};
+
+/* 六类占比（全量 9503 条，实测） */
+const CLASS_DIST = [
+  { name:'低俗色情', n:1996, pct:21.0 },
+  { name:'谩骂引战', n:1904, pct:20.0 },
+  { name:'黑产广告', n:1867, pct:19.6 },
+  { name:'博彩',     n:1748, pct:18.4 },
+  { name:'欺诈',     n:1000, pct:10.5 },
+  { name:'不违规',   n:988,  pct:10.4 }
+];
+
+/* 类别加权实验（实验报告第四节，真实值） */
+const WEIGHT_ROWS = [
+  { name:'欺诈',     base:0.851, weighted:0.904, recall:0.94, note:'核心目标达成', good:true },
+  { name:'不违规',   base:0.985, weighted:0.990, recall:0.99, note:'持平', good:null },
+  { name:'黑产广告', base:0.950, weighted:0.963, recall:0.96, note:'小幅提升', good:null },
+  { name:'博彩',     base:0.940, weighted:0.941, recall:0.92, note:'持平', good:null },
+  { name:'谩骂引战', base:0.934, weighted:0.912, recall:0.87, note:'略有牺牲', good:false },
+  { name:'低俗色情', base:0.920, weighted:0.895, recall:0.94, note:'精确率下降（谩骂→低俗 24 条）', good:false }
+];
+
+/* 混淆矩阵（测试集 956 条，实验报告第五节） */
+const CONFUSION = [
+  { truth:'不违规 (100)',   cells:[99,0,0,0,0,1] },
+  { truth:'黑产广告 (188)', cells:[0,181,6,0,0,1] },
+  { truth:'欺诈 (100)',     cells:[0,5,94,1,0,0] },
+  { truth:'博彩 (176)',     cells:[0,2,7,161,0,6] },
+  { truth:'谩骂引战 (191)', cells:[1,0,0,0,166,24] },
+  { truth:'低俗色情 (201)', cells:[0,0,1,4,7,189] }
+];
+
+/* 阈值拒判四个实测工作点（实验报告第六节） */
+const THRESHOLD_POINTS = [
+  { t:0.00, auto:100.0, acc:93.10, recall:92.4, note:'纯 argmax' },
+  { t:0.60, auto:96.0,  acc:94.88, recall:90.2, note:'4% 流量进人工，准确率 +1.8' },
+  { t:0.80, auto:90.9,  acc:96.55, recall:86.4, note:'更保守' },
+  { t:0.90, auto:85.7,  acc:97.92, recall:82.1, note:'召回损失过大' }
+];
+
+/* 四方案对比（实验报告第三节） */
+const SCHEMES = [
+  { name:'BERT 微调 + 类别加权（最终采用）', cfg:'batch 8 / max_len 64 / lr 2e-5 / 3 epoch / 加权损失', acc:'0.931', f1:'0.934', lat:'103 ms（量化后 73 ms）', note:'本页主口径：accuracy 0.9310 / macro-F1 0.9343', strong:true },
+  { name:'BERT 微调（无加权基线）',        cfg:'同上，普通 CrossEntropy',                          acc:'0.933', f1:'0.930', lat:'103 ms', note:'准确率高一点但欺诈召回只有 0.77', strong:false },
+  { name:'BERT 动态量化 (int8)',           cfg:'对基线模型 quantize_dynamic',                      acc:'0.915', f1:'0.915', lat:'73 ms',  note:'体积 390 → 145.6MB，1.41× 加速', strong:false },
+  { name:'fastText 字级 · 手动参数',        cfg:'dim 32 / wordNgrams 2 / epoch 100',                acc:'—',     f1:'0.908', lat:'<1 ms',  note:'吞吐优先时的可用粗筛方案', strong:false },
+  { name:'fastText 字级 · 自动调参',        cfg:'autotune 30s（结果有波动）',                        acc:'—',     f1:'0.894~0.909', lat:'<1 ms', note:'同样本重跑会漂移，不宜作为汇报定值', strong:false },
+  { name:'fastText 词级 · 手动参数',        cfg:'jieba 分词',                                       acc:'—',     f1:'0.872', lat:'<1 ms',  note:'分词质量影响明显', strong:false },
+  { name:'fastText 词级 · 自动调参',        cfg:'体积上限 50M',                                     acc:'—',     f1:'0.855', lat:'<1 ms',  note:'自动调参未超过手动', strong:false },
+  { name:'随机森林 + TF-IDF',              cfg:'自带 8:2 切分（非同一测试集）',                     acc:'0.784', f1:'0.780', lat:'<1 ms',  note:'⚠️ 切分口径不同，不能与上面直接横向比较', strong:false }
+];
+
+/* 压缩方案（实验报告第七、八、九节 + 磁盘实测） */
+const COMPRESSION = [
+  { name:'原始模型（加权）',           size:390.2, f1:0.9343, speed:'5.19 ms（模型前向）' },
+  { name:'动态量化 int8',              size:145.6, f1:0.915,  speed:'73 ms（CPU 端到端，1.41×）' },
+  { name:'知识蒸馏 12→4 层',           size:173.9, f1:0.9230, speed:'1.68 ms（模型前向，3.08×）' },
+  { name:'非结构化剪枝 50%',           size:390.2, f1:0.9305, speed:'不加速（需稀疏算子）' },
+  { name:'剪枝 + 量化',                size:145.6, f1:0.9146, speed:'gzip 后 98.0MB' }
+];
+
+/* 离线兜底用的关键词规则（明确标注为「内置规则」，不是模型推理） */
+const KEYWORDS = {
+  1:['代办','证件','包过','出证','办证','加微信','加我微信','引流','刷单','好评','销量提升','助力','私聊','滴滴我','兼职','招聘打字'],
+  2:['稳赚','日入','日赚','保证','保证金','内幕','包赚','无风险','高回报','先交','对接','投资项目','轻轻松松','不收费','躺赚'],
+  3:['六合彩','彩票','博彩','下注','开奖','打麻将','押注','棋牌','筹码','赢钱','赌','私彩','娱乐城','上岸','打米','七位数'],
+  /* 谩骂引战：补上常见辱骂词；刻意不用单字「狗」，避免「狗粮 / 热狗」这类误伤，改用「狗东西」 */
+  4:['傻子','傻逼','傻x','白痴','蠢','猪脑','弱智','脑can','脑残','废物','垃圾','找骂','喷子','智商税','神经病','狗东西','恶心','滚','脑子有病'],
+  5:['寂寞','陪聊','私密','直播间','深夜','调教','性感','裸','激情','一对一','约','宝贝']
+};
+
+/* 示例文案（六类各一条，用于一键填充） */
+const SAMPLES = [
+  { name:'不违规',   text:'春季新款纯棉衬衫，透气舒适，满 199 减 50，七天无理由退换。' },
+  { name:'黑产广告', text:'专业代办各类证件，全程包过，加微信咨询当天可出。' },
+  { name:'欺诈',     text:'内部渠道稳赚项目，日入过千，先交保证金即可对接。' },
+  { name:'博彩',     text:'彩票内部资料免费领，加群提前看今晚开奖号码。' },
+  { name:'谩骂引战', text:'买这个的都是傻子吧，这牌子就是垃圾，谁买谁交智商税。' },
+  { name:'低俗色情', text:'深夜一个人？点进来私密陪聊，一对一聊天。' }
+];
+
+/* ============================================================
+   2. 状态与持久化
+   ============================================================ */
+const STORE_KEY = 'compliance-console/v1';
+const state = {
+  routeKey:'bert',
+  threshold:0.60,
+  forceOffline:false,
+  bases:{},
+  history:[],
+  batchRows:[],
+  batchFilter:'all',
+  batchSort:'index',
+  uploadLabels:null,          /* 上传文件带来的标签，按原始行号对齐 */
+  uploadName:'',
+  recFilter:'all',            /* 审核记录页的筛选状态 */
+  recRoute:'all',
+  recOrigin:'all',            /* all / single / batch */
+  recSource:'all',
+  apiStatus:{ bert:'unknown', rf:'unknown', fasttext:'unknown', llm:'unknown' }
+};
+Object.keys(ROUTES).forEach(function(k){ state.bases[k] = ROUTES[k].defaultBase; });
+
+function saveState(){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify({
+      routeKey:state.routeKey, threshold:state.threshold, forceOffline:state.forceOffline, bases:state.bases
+    }));
+  }catch(e){ /* 隐私模式下 localStorage 不可用，忽略 */ }
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return;
+    const saved = JSON.parse(raw);
+    if(saved.routeKey && ROUTES[saved.routeKey]) state.routeKey = saved.routeKey;
+    if(typeof saved.threshold === 'number') state.threshold = saved.threshold;
+    if(typeof saved.forceOffline === 'boolean') state.forceOffline = saved.forceOffline;
+    if(saved.bases) Object.keys(ROUTES).forEach(function(k){ if(saved.bases[k]) state.bases[k] = saved.bases[k]; });
+  }catch(e){ /* 损坏的存档直接忽略 */ }
+}
+
+/* ── 同源接口自动识别 ──────────────────────────────────────────────
+   本页面是被某个 HTTP 服务托管出来的，那个服务往往就是最该调的接口。
+   但不能无脑采用：如果只是用静态服务器托管的页面，它的 origin 上没有 /predict。
+   所以先用一个精确指纹探测：GET /predict 在真正的 Flask 接口上返回 405
+   （该路由只接受 POST/OPTIONS），而静态服务器只会返回 404。 */
+let sameOriginApi = null;   /* null=未探测 / true / false */
+
+function sameOriginBase(){
+  if(typeof location === 'undefined') return null;
+  if(location.protocol !== 'http:' && location.protocol !== 'https:') return null;
+  const origin = location.origin;
+  return (origin && origin !== 'null') ? origin : null;
+}
+
+function probeSameOrigin(){
+  const origin = sameOriginBase();
+  if(!origin) return Promise.resolve(false);
+  if(typeof fetch !== 'function') return Promise.resolve(false);
+  return fetch(origin + '/predict', { method:'GET' }).then(function(res){
+    return res.status === 405;
+  }).catch(function(){ return false; });
+}
+
+/* 取某个路线的接口地址。
+   同源捷径**只在「本页面的服务端口 == 该路线端口」时才生效**：
+   例如页面由 :8000 托管，那只有 BERT(端口 8000) 走同源，RF/fastText/LLM 仍各走自己的端口。
+   早期版本写成「凡是可用路线都用同源」，导致四条路线全被指到同一个端口（切了也还是 BERT）。 */
+function apiBaseFor(route){
+  const origin = sameOriginBase();
+  if(origin && sameOriginApi === true && String(route.port) === location.port){
+    return origin;
+  }
+  return state.bases[route.key] || route.defaultBase;
+}
+
+/* 探测某路线的服务是否在跑。
+   指纹：真正的 Flask 接口对 GET /predict 返回 405（该路由只接受 POST/OPTIONS）；
+   端口上什么都没有时 fetch 直接失败 → offline。 */
+function checkRouteHealth(route){
+  if(typeof fetch !== 'function') return Promise.resolve('unknown');
+  const base = apiBaseFor(route).replace(/\/+$/, '');
+  return fetch(base + '/predict', { method:'GET' }).then(function(res){
+    return res.status === 405 ? 'online' : 'unknown';
+  }).catch(function(){ return 'offline'; });
+}
+
+/* 检测并把结果反映到顶部徽章；announce=true 时额外弹提示（用于用户主动切换路线） */
+function refreshRouteHealth(route, announce){
+  state.apiStatus[route.key] = null;      /* null → 徽章显示「检测中」 */
+  renderApiBadge();
+  return checkRouteHealth(route).then(function(st){
+    state.apiStatus[route.key] = st;
+    renderApiBadge();
+    if(announce){
+      toast('<b>' + esc(route.label) + '</b><br>' + esc(apiBaseFor(route)) +
+        (st === 'online' ? ' · 服务在线' : ' · 未检测到服务，请先启动它'));
+    }
+    return st;
+  });
+}
+
+/* ============================================================
+   3. 工具函数
+   ============================================================ */
+const $ = function(id){ return document.getElementById(id); };
+function esc(s){
+  return String(s).replace(/[&<>"']/g, function(ch){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch];
+  });
+}
+function pct(v, digits){ return (v * 100).toFixed(digits === undefined ? 2 : digits) + '%'; }
+const activeToasts = new Map();   /* 同类提示不重复堆叠，避免刷屏遮挡内容 */
+function toast(msg, kind){
+  if(activeToasts.has(msg)) return;
+  const host = $('toastHost');
+  const el = document.createElement('div');
+  el.className = 'toast' + (kind ? ' ' + kind : '');
+  el.innerHTML = msg;
+  host.appendChild(el);
+  activeToasts.set(msg, el);
+  setTimeout(function(){ el.remove(); activeToasts.delete(msg); }, 4200);
+}
+
+/* 阈值工作点：命中实测点则标实测，否则线性插值并标注为估计 */
+function thresholdStats(threshold){
+  const pts = THRESHOLD_POINTS;
+  const t = threshold;
+  if(t <= pts[0].t) return { t:t, auto:pts[0].auto, acc:pts[0].acc, recall:pts[0].recall, exact:Math.abs(t - pts[0].t) < 1e-9 };
+  const last = pts[pts.length - 1];
+  if(t >= last.t) return { t:t, auto:last.auto, acc:last.acc, recall:last.recall, exact:Math.abs(t - last.t) < 1e-9 };
+  for(let i = 0; i < pts.length - 1; i++){
+    const a = pts[i], b = pts[i + 1];
+    if(t >= a.t && t <= b.t){
+      const k = (t - a.t) / (b.t - a.t);
+      const lerp = function(x, y){ return x + (y - x) * k; };
+      return {
+        t:t, auto:lerp(a.auto, b.auto), acc:lerp(a.acc, b.acc), recall:lerp(a.recall, b.recall),
+        exact:Math.abs(t - a.t) < 1e-9 || Math.abs(t - b.t) < 1e-9
+      };
+    }
+  }
+  return { t:t, auto:pts[0].auto, acc:pts[0].acc, recall:pts[0].recall, exact:false };
+}
+
+/* ============================================================
+   4. 离线兜底：内置规则打分（不是模型推理）
+   ============================================================ */
+function mockScore(text){
+  const t = String(text).toLowerCase();
+  const raw = [0, 0, 0, 0, 0, 0];
+  let hitsTotal = 0;
+  Object.keys(KEYWORDS).forEach(function(cid){
+    KEYWORDS[cid].forEach(function(word){
+      const w = word.toLowerCase();
+      let idx = 0, hits = 0;
+      while((idx = t.indexOf(w, idx)) !== -1){ hits++; idx += w.length; }
+      if(hits > 0){
+        const weight = 1 + Math.min(word.length, 4) * 0.35;   /* 长词更可信 */
+        raw[cid] += hits * weight;
+        hitsTotal += hits;
+      }
+    });
+  });
+  /* 不违规基线：违规命中越多，衰减越快 */
+  raw[0] = Math.max(0.25, 1.9 - hitsTotal * 1.05);
+  /* 关键安全规则：只要有任何违规命中，正常类的分数就必须低于最高违规类。
+     否则 1 个短词命中时两者会打平，而平分时数组顺序会让「不违规」赢 ——
+     在合规场景里「把明显违规判成不违规」是最危险的错误，必须显式排除。 */
+  if(hitsTotal > 0){
+    let maxViolation = 0;
+    for(let i = 1; i < 6; i++){ if(raw[i] > maxViolation) maxViolation = raw[i]; }
+    raw[0] = Math.min(raw[0], maxViolation - 0.15);
+  }
+  for(let i = 1; i < 6; i++){ if(raw[i] === 0) raw[i] = 0.04; } /* 给零命中的类一点底噪 */
+
+  const T = 0.55;
+  const max = Math.max.apply(null, raw);
+  const exps = raw.map(function(v){ return Math.exp((v - max) / T); });
+  const sum = exps.reduce(function(a, b){ return a + b; }, 0);
+  let probs = exps.map(function(v){ return v / sum; });
+  probs = probs.map(function(p){ return Math.min(p, 0.972); });  /* 真实模型很少 >0.99 */
+  const s2 = probs.reduce(function(a, b){ return a + b; }, 0);
+  return probs.map(function(p){ return p / s2; });
+}
+
+function buildResult(text, probs, source, latencyMs, extra){
+  let best = 0;
+  for(let i = 1; i < probs.length; i++){ if(probs[i] > probs[best]) best = i; }
+  const className = CLASSES[best].name;
+  const confidence = probs[best];
+  const isReview = state.threshold > 0 && confidence < state.threshold;
+  return {
+    text:text,
+    routeKey:state.routeKey,
+    className:className,
+    rawClass:className,
+    confidence:confidence,
+    probs:probs,
+    isReview:isReview,
+    confidenceKnown:true,
+    reviewInferred:false,
+    source:source,
+    latencyMs:latencyMs,
+    at:Date.now(),
+    note:(extra && extra.note) || ''
+  };
+}
+
+function offlineResult(text){
+  const started = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  const probs = mockScore(text);
+  const elapsed = ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - started;
+  return buildResult(text, probs, 'offline', elapsed, { note:'内置关键词规则生成，非模型推理' });
+}
+
+/* ============================================================
+   5. 接口调用与字段归一
+   ============================================================ */
+function normalizeApiResult(text, data, route, latencyMs){
+  const rawPred = data && typeof data.pred_class === 'string' ? data.pred_class : '';
+  const rawClass = data && typeof data.raw_class === 'string' ? data.raw_class : '';
+  let confidence = (data && typeof data.confidence === 'number') ? data.confidence : null;
+  let isReview;
+  let reviewInferred = false;
+
+  if(rawPred === REVIEW_LABEL){
+    isReview = true;
+  }else if(typeof data.need_review === 'boolean'){
+    isReview = data.need_review;
+  }else if(confidence !== null){
+    isReview = state.threshold > 0 && confidence < state.threshold;
+    reviewInferred = true;                       /* 该路线没有 need_review，由阈值推断 */
+  }else if(rawPred === '' || !classByName(rawPred)){
+    isReview = true;                             /* 无法归一到 6 类，按需要人工处理 */
+  }else{
+    isReview = false;                            /* 无置信度、无标志：只能按类别处置 */
+  }
+
+  /* 概率分布：BERT 接口会返回 6 类 probs；其余三条路线只返回 pred_class，此处按需构造近似分布并标注 */
+  let probs = null;
+  if(data && Array.isArray(data.probs) && data.probs.length === 6){
+    const nums = data.probs.map(Number);
+    if(nums.every(function(v){ return isFinite(v); })){
+      const total = nums.reduce(function(a, b){ return a + b; }, 0);
+      probs = total > 0 ? nums.map(function(v){ return v / total; }) : null;
+    }
+  }
+  /* 最大类的定位：转人工时 pred_class 已被替换成「需人工复核」，必须回退到 raw_class */
+  const topClass = classByName(rawPred === REVIEW_LABEL ? rawClass : rawPred) || classByName(rawClass) || classByName(rawPred);
+  if(!probs && confidence !== null && topClass){
+    /* 只有最大类置信度时，构造一个「其余概率均分」的近似分布，并明确标注为近似 */
+    probs = [0, 0, 0, 0, 0, 0];
+    const rest = Math.max(0, 1 - confidence) / 5;
+    for(let i = 0; i < 6; i++){ probs[i] = rest; }
+    probs[topClass.id] = confidence;
+  }
+
+  const displayClass = (rawPred === REVIEW_LABEL)
+    ? (classByName(rawClass) ? rawClass : '未知类别')
+    : (classByName(rawPred) ? rawPred : (classByName(rawClass) ? rawClass : '未知类别'));
+
+  return {
+    text:text,
+    routeKey:route.key,
+    className:displayClass,
+    rawClass:classByName(rawClass) ? rawClass : null,
+    confidence:confidence,
+    probs:probs,
+    probsApprox:!!probs && !(data && Array.isArray(data.probs)),
+    isReview:isReview,
+    confidenceKnown:confidence !== null,
+    reviewInferred:reviewInferred,
+    source:'api',
+    latencyMs:latencyMs,
+    at:Date.now(),
+    note:''
+  };
+}
+
+function callApi(route, text, timeoutMs){
+  const base = apiBaseFor(route).replace(/\/+$/, '');
+  const ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  const timer = ctl ? setTimeout(function(){ ctl.abort(); }, timeoutMs || 8000) : null;
+  const started = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+  const opts = {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body:JSON.stringify({ text:text })
+  };
+  if(ctl) opts.signal = ctl.signal;
+  return fetch(base + '/predict', opts).then(function(res){
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }).then(function(data){
+    const elapsed = ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - started;
+    return normalizeApiResult(text, data, route, elapsed);
+  }).catch(function(err){
+    if(timer) clearTimeout(timer);
+    throw err;
+  });
+}
+
+/* 单条审核：接口优先，失败回退离线兜底 */
+function reviewOne(text, route){
+  if(state.forceOffline || route.availability === 'blocked'){
+    const r = offlineResult(text);
+    if(route.availability === 'blocked') r.note = '该路线权重缺失，已用内置规则兜底：' + route.availabilityText;
+    return Promise.resolve(r);
+  }
+  return callApi(route, text, 8000).then(function(r){
+    state.apiStatus[route.key] = 'online';
+    renderApiBadge();
+    return r;
+  }).catch(function(err){
+    state.apiStatus[route.key] = 'fallback';
+    renderApiBadge();
+    const r = offlineResult(text);
+    r.note = '接口不可用（' + (err && err.name === 'AbortError' ? '请求超时' : (err && err.message ? err.message : '未知错误')) + '），已回退到内置规则';
+    return r;
+  });
+}
+
+/* ============================================================
+   6. 渲染：顶部与导航
+   ============================================================ */
+/* 处置判定。
+   有置信度的路线（BERT、以及离线兜底）→ 用**当前页面阈值**实时判定，
+   所以拖动右上角滑块，已显示的结论会立刻跟着翻转；
+   无置信度的路线（RF / fastText 只返回类别；LLM 靠提示词拒判）→ 沿用结果里已定的判定。 */
+function verdictOf(result){
+  const reject = result.confidenceKnown
+    ? (state.threshold > 0 && result.confidence < state.threshold)
+    : result.isReview;
+  if(reject){
+    return { key:'review', text:'转人工复核', tag:'tag-warn', color:'var(--warn)' };
+  }
+  if(result.className === '不违规'){
+    return { key:'auto-pass', text:'自动通过', tag:'tag-ok', color:'var(--accent)' };
+  }
+  return { key:'auto-block', text:'自动拦截', tag:'tag-bad', color:'var(--danger)' };
+}
+
+function renderApiBadge(){
+  const badge = $('apiBadge');
+  const route = ROUTES[state.routeKey];
+  const status = state.apiStatus[route.key];
+  const base = apiBaseFor(route);
+  let port = route.port;
+  try { port = new URL(base).port || port; } catch(e){ /* base 不是合法 URL 时退回默认端口 */ }
+  let cls = '', text = '';
+  if(route.availability === 'blocked'){
+    cls = 'is-fallback'; text = '该路线权重缺失';
+  }else if(state.forceOffline){
+    cls = 'is-fallback'; text = '强制离线兜底：' + port;
+  }else if(status === 'online'){
+    cls = 'is-online'; text = '接口在线：' + port;
+  }else if(status === 'offline'){
+    cls = 'is-error'; text = '未启动：' + port;
+  }else if(status === 'fallback'){
+    cls = 'is-fallback'; text = '离线兜底：' + port;
+  }else{
+    cls = ''; text = '检测中：' + port;
+  }
+  badge.className = 'api-badge ' + cls;
+  badge.title = route.label + ' → ' + base;
+  $('apiBadgeText').textContent = text;
+  renderOfflineBanner(route, status);
+}
+
+/* 未连上模型时给出醒目且可执行的提示，避免把内置规则误当成模型能力 */
+function renderOfflineBanner(route, status){
+  const host = $('offlineBanner');
+  if(!host) return;
+  if(status === 'online' && !state.forceOffline && route.availability !== 'blocked'){
+    host.innerHTML = '';
+    return;
+  }
+  let reason, howto;
+  if(route.availability === 'blocked'){
+    reason = '该路线（' + route.short + '）的权重文件不存在，' + route.availabilityText + '。';
+    howto = '按 06-web/README.md 里的说明先生成权重，或切到 BERT 路线。';
+  }else if(state.forceOffline){
+    reason = '你在「设置」里开启了强制离线兜底。';
+    howto = '在「设置」里取消勾选「强制离线兜底」，再点一次「开始审核」。';
+  }else{
+    const isFile = (typeof location !== 'undefined' && location.protocol === 'file:');
+    reason = '没有连上 ' + apiBaseFor(route) + ' 上的服务（连接被拒、超时，或跨域被拦）。';
+    howto = isFile
+      ? '你现在是用 <code>file://</code> 双击打开的，浏览器会拦掉对 127.0.0.1 的跨域请求。' +
+        '<b>请改用同源地址打开：</b><a href="http://127.0.0.1:8000/" style="color:var(--accent);text-decoration:underline">http://127.0.0.1:8000/</a>' +
+        ' —— 服务在跑的话，点这个链接就行（前端与接口同源，完全不跨域）。'
+      : '启动服务：<code>cd 04_Bett</code> 然后 <code>python api_flask_server.py</code>（监听 127.0.0.1:8000），再点一次「开始审核」。' +
+        '注意端口不要用 6000：它在 Chromium 受限端口名单里，浏览器会报 <code>ERR_UNSAFE_PORT</code>。';
+  }
+  host.innerHTML = '<div class="note danger" style="margin-bottom:var(--space-5)">' +
+    '<b>当前结论不来自模型：</b>由内置关键词规则生成，<b>不代表「' + esc(route.short) + '」的真实能力</b>。' +
+    esc(reason) +
+    '<br>' + howto +
+    '</div>';
+}
+
+function renderRouteSelect(){
+  const sel = $('routeSelect');
+  sel.innerHTML = Object.keys(ROUTES).map(function(k){
+    return '<option value="' + k + '">' + esc(ROUTES[k].label) + '</option>';
+  }).join('');
+  sel.value = state.routeKey;
+}
+
+function renderRouteTag(){
+  const route = ROUTES[state.routeKey];
+  const tag = $('routeTag');
+  const avail = route.availability === 'ready' ? 'tag-ok'
+              : route.availability === 'env' ? 'tag-info' : 'tag-warn';
+  tag.className = 'tag ' + avail;
+  tag.textContent = route.short + ' · ' + route.availabilityText;
+  $('routeTag').title = route.fields;
+}
+
+function renderThresholdPanel(){
+  const s = thresholdStats(state.threshold);
+  const exactTag = s.exact
+    ? '<span class="tag tag-ok">实测工作点</span>'
+    : '<span class="tag tag-warn">插值估计</span>';
+  $('thresholdPanel').innerHTML =
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">' +
+      '<span class="mono" style="font-size:22px;font-weight:600">' + (state.threshold * 100).toFixed(1) + '%</span>' +
+      exactTag +
+    '</div>' +
+    '<div class="bars">' +
+      barRow('自动判定占比', s.auto, 100, 'var(--accent-2)', '%') +
+      barRow('自动判定准确率', s.acc, 100, 'var(--accent)', '%') +
+      barRow('违规召回', s.recall, 100, 'var(--c1)', '%') +
+    '</div>';
+}
+
+function barRow(label, value, max, color, unit){
+  const w = Math.max(0, Math.min(100, (value / max) * 100));
+  return '<div class="bar-row">' +
+    '<span class="muted">' + esc(label) + '</span>' +
+    '<div class="bar-track"><div class="bar-fill" style="width:' + w.toFixed(1) + '%;background:' + color + '"></div></div>' +
+    '<span class="bar-val">' + value.toFixed(1) + (unit || '') + '</span>' +
+  '</div>';
+}
+
+/* ============================================================
+   7. 渲染：审核结果
+   ============================================================ */
+function renderResult(result){
+  const card = $('resultCard');
+  const body = $('resultBody');
+  card.style.borderLeftColor = classColor(result.className);
+  card.classList.add('has-result');
+  setTimeout(function(){ card.classList.remove('has-result'); }, 500);
+
+  const v = verdictOf(result);
+  const srcLabel = result.source === 'api'
+    ? '<span class="tag tag-ok">真实接口</span>'
+    : '<span class="tag tag-warn">内置规则 · 非模型推理</span>';
+  $('resultSourceHint').innerHTML = srcLabel;
+
+  const confBlock = result.confidenceKnown
+    ? '<div class="conf-wrap">' +
+        '<div class="verdict-label">置信度</div>' +
+        '<div class="conf-value" style="color:' + v.color + '">' + (result.confidence * 100).toFixed(1) + '%</div>' +
+        '<div class="conf-bar">' +
+          '<div class="conf-fill" style="width:' + Math.min(100, result.confidence * 100).toFixed(1) + '%;background:' + v.color + '"></div>' +
+          '<div class="conf-mark" style="left:' + Math.min(100, state.threshold * 100).toFixed(1) + '%" title="阈值"></div>' +
+        '</div>' +
+        '<div class="conf-scale"><span>0%</span><span>阈值 ' + (state.threshold * 100).toFixed(1) + '%</span><span>100%</span></div>' +
+      '</div>'
+    : '<div class="conf-wrap">' +
+        '<div class="verdict-label">置信度</div>' +
+        '<div class="conf-value" style="color:var(--text-tertiary);font-size:22px">不返回</div>' +
+        '<p class="hint">该路线接口没有 confidence 字段</p>' +
+      '</div>';
+
+  /* 判定依据要写清楚：是按页面阈值、按后端拒判、还是按类别硬判 */
+  const thrPct = (state.threshold * 100).toFixed(1);
+  const curRoute = ROUTES[result.routeKey];
+  const isReviewNow = result.confidenceKnown
+    ? (state.threshold > 0 && result.confidence < state.threshold)
+    : result.isReview;
+  let reviewNote = '';
+  if(isReviewNow){
+    reviewNote = '<div class="note warn" style="margin-top:12px">' +
+      (result.confidenceKnown
+        ? '置信度 <b class="mono">' + (result.confidence * 100).toFixed(1) + '%</b> 低于页面阈值 <b class="mono">' + thrPct + '%</b> → 本次判定<b>转人工复核</b>。'
+        : '本次判定<b>转人工复核</b>。该路线接口<b>不返回置信度</b>（只有 <code>pred_class</code>），拒判依据来自' +
+          (result.routeKey === 'llm' ? '提示词要求模型在无法判断时输出「需人工复核」' : '类别本身') +
+          '，<b>与页面阈值无关</b> —— 这正是 RF / fastText 做不了阈值分流的原因。') +
+      (result.rawClass && result.rawClass !== result.className
+        ? '<br>模型原本的判断是「' + esc(result.rawClass) + '」，仅供人工参考。' : '') +
+      (result.confidenceKnown && curRoute.hasReviewFlag
+        ? '<br>页面滑块只影响本页的处置判断，<b>不会改动后端 <code>config.py</code> 里的 <code>conf_threshold</code></b>。' : '') +
+      '</div>';
+  }else if(result.confidenceKnown){
+    reviewNote = '<div class="note" style="margin-top:12px">' +
+      (result.isReview
+        ? '置信度 <b class="mono">' + (result.confidence * 100).toFixed(1) + '%</b> 未低于页面阈值 <b class="mono">' + thrPct +
+          '%</b>，页面按类别给出处置；但<b>后端判为「转人工」</b>（' +
+          (result.routeKey === 'llm' ? '模型自己要求转人工，触发的是提示词里的弃权条件' : '它用的是 <code>conf_threshold</code>，默认 0.60') +
+          '）。把滑块调高一些即可与后端一致。'
+        : '置信度 <b class="mono">' + (result.confidence * 100).toFixed(1) + '%</b> ≥ 页面阈值 <b class="mono">' + thrPct +
+          '%</b>，未触发拒判。<b>把右上角滑块调到超过这个置信度，本次结论会立即变成「转人工复核」。</b>') +
+      '</div>';
+  }
+
+  let probsBlock = '';
+  if(result.probs){
+    const order = result.probs.map(function(p, i){ return { p:p, i:i }; })
+      .sort(function(a, b){ return b.p - a.p; });
+    const topSet = {};
+    order.slice(0, 3).forEach(function(o){ topSet[o.i] = true; });
+    probsBlock = '<div class="probs">' + CLASSES.map(function(c, i){
+      const isTop = !!topSet[i];
+      return '<div class="prob-row' + (isTop ? ' top' : '') + '">' +
+        '<span class="prob-name"><i class="dot" style="background:' + c.hex + '"></i>' + esc(c.name) + '</span>' +
+        '<div class="prob-track"><div class="prob-fill" data-w="' + (result.probs[i] * 100).toFixed(2) + '" style="background:' + c.hex + '"></div></div>' +
+        '<span class="prob-val">' + (result.probs[i] * 100).toFixed(1) + '%</span>' +
+      '</div>';
+    }).join('') + '</div>' +
+    (result.probsApprox ? '<p class="hint" style="margin-top:8px">该接口只返回最大类置信度（响应里没有 probs 字段），其余五类按均分近似显示。</p>' : '');
+  }else{
+    probsBlock = '<div class="note" style="margin-top:16px">本次响应里没有 probs —— 大模型路线要模型按约定输出六类分数才拿得到；当它没按 JSON 格式回、解析失败时，会退化为「只给类别」（此时无量信度也无法画概率条）。重试一次通常就正常了。</div>';
+  }
+
+  const noteBlock = result.note ? '<div class="note warn" style="margin-top:12px">' + esc(result.note) + '</div>' : '';
+
+  body.innerHTML =
+    '<div class="verdict-row">' +
+      '<div class="verdict-main">' +
+        '<div class="verdict-label">判定类别</div>' +
+        '<div class="verdict-class" style="color:' + classColor(result.className) + '">' + esc(result.className) + '</div>' +
+        '<div class="verdict-actions">' +
+          '<span class="tag ' + v.tag + '"><i class="dot"></i>' + v.text + '</span>' +
+          srcLabel +
+        '</div>' +
+      '</div>' +
+      confBlock +
+    '</div>' +
+    reviewNote +
+    probsBlock +
+    '<div class="meta-row">' +
+      '<span>模型路线 <b>' + esc(ROUTES[result.routeKey].label) + '</b></span>' +
+      '<span>' + (result.source === 'api' ? '端到端往返' : '本地规则耗时') + ' <b class="mono">' + result.latencyMs.toFixed(2) + ' ms</b></span>' +
+      '<span>文案长度 <b class="mono">' + result.text.length + '</b> 字</span>' +
+      '<span>阈值 <b class="mono">' + (state.threshold * 100).toFixed(1) + '%</b></span>' +
+      '<span>' + new Date(result.at).toLocaleTimeString('zh-CN') + '</span>' +
+    '</div>' +
+    noteBlock;
+
+  /* 概率条入场动画（尊重 prefers-reduced-motion） */
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fills = body.querySelectorAll('.prob-fill');
+  Array.prototype.forEach.call(fills, function(el, i){
+    const target = el.getAttribute('data-w') + '%';
+    if(reduce){ el.style.width = target; return; }
+    el.style.width = '0%';
+    setTimeout(function(){ el.style.width = target; }, 40 * i + 30);
+  });
+}
+
+function renderHistory(){
+  const host = $('historyList');
+  if(!state.history.length){
+    host.innerHTML = '<p class="empty">暂无记录</p>';
+    return;
+  }
+  const recent = state.history.slice(0, 8);          /* 侧栏只显示最近 8 条 */
+  host.innerHTML = recent.map(function(h){
+    return '<button class="hist-item" data-hist="' + state.history.indexOf(h) + '">' +
+      '<div class="hist-top">' +
+        '<span class="tag tag-neutral" style="color:' + classColor(h.className) + '"><i class="dot"></i>' + esc(h.className) + '</span>' +
+        (h.confidenceKnown ? '<span class="mono dim" style="font-size:11.5px">' + (h.confidence * 100).toFixed(1) + '%</span>' : '<span class="dim" style="font-size:11.5px">无置信度</span>') +
+        '<span class="dim" style="font-size:11px;margin-left:auto">' + esc(verdictOf(h).text) + '</span>' +
+      '</div>' +
+      '<div class="hist-text">' + esc(h.text) + '</div>' +
+    '</button>';
+  }).join('');
+  Array.prototype.forEach.call(host.querySelectorAll('[data-hist]'), function(btn){
+    btn.addEventListener('click', function(){
+      const h = state.history[Number(btn.getAttribute('data-hist'))];
+      if(!h) return;
+      $('reviewText').value = h.text;
+      updateCharCount();
+      lastResult = h;
+      switchView('review');
+      renderResult(h);
+    });
+  });
+}
+
+/* ============================================================
+   7.5 审核记录（独立页面 + 本地持久化）
+   ============================================================ */
+const HIST_KEY = 'compliance-console/history/v1';
+const HIST_MAX = 1000;         /* 批量审核会一次写入很多条，上限放大到 1000 */
+
+/* 只持久化必要字段（probs 太大且不必重放），并保证反序列化后结构一致 */
+function compactResult(r){
+  return {
+    text:r.text, routeKey:r.routeKey, className:r.className, rawClass:r.rawClass || null,
+    confidence:(typeof r.confidence === 'number') ? r.confidence : null,
+    confidenceKnown:!!r.confidenceKnown, probs:null,
+    isReview:!!r.isReview, source:r.source, latencyMs:r.latencyMs || 0,
+    at:r.at || Date.now(), note:r.note || '',
+    origin:r.origin || 'single', batchLabel:r.batchLabel || ''
+  };
+}
+function saveHistory(){
+  try{
+    localStorage.setItem(HIST_KEY, JSON.stringify(state.history.slice(0, HIST_MAX).map(compactResult)));
+  }catch(e){ /* 超配额或隐私模式：忽略，不影响使用 */ }
+}
+function loadHistory(){
+  try{
+    const raw = localStorage.getItem(HIST_KEY);
+    if(!raw) return;
+    const arr = JSON.parse(raw);
+    if(Array.isArray(arr)) state.history = arr.slice(0, HIST_MAX);
+  }catch(e){ state.history = []; }
+}
+
+/* 单条审核写入记录 */
+function pushHistory(result, origin, batchLabel){
+  result.origin = origin || 'single';
+  if(batchLabel) result.batchLabel = batchLabel;
+  state.history.unshift(result);
+  if(state.history.length > HIST_MAX) state.history.length = HIST_MAX;
+  saveHistory();
+  renderHistory();
+  renderRecords();
+}
+
+/* 批量审核整批写入记录：一次性合并，保持组内原始顺序（逐条 unshift 会把顺序倒过来） */
+function pushHistoryBatch(results, batchLabel){
+  const recs = results.filter(Boolean).map(function(r){
+    r.origin = 'batch';
+    r.batchLabel = batchLabel || '批量文本';
+    return r;
+  });
+  if(!recs.length) return;
+  state.history = recs.concat(state.history);
+  if(state.history.length > HIST_MAX) state.history.length = HIST_MAX;
+  saveHistory();
+  renderHistory();
+  renderRecords();
+}
+
+function filteredRecords(){
+  let rows = state.history.slice();
+  if(state.recFilter !== 'all') rows = rows.filter(function(r){ return verdictOf(r).key === state.recFilter; });
+  if(state.recRoute !== 'all') rows = rows.filter(function(r){ return r.routeKey === state.recRoute; });
+  if(state.recOrigin !== 'all') rows = rows.filter(function(r){ return (r.origin || 'single') === state.recOrigin; });
+  if(state.recSource !== 'all') rows = rows.filter(function(r){ return r.source === state.recSource; });
+  return rows;
+}
+
+function renderRecords(){
+  const host = $('recBody');
+  if(!host) return;
+  const all = state.history;
+  const counts = { 'auto-pass':0, 'auto-block':0, 'review':0 };
+  let singleN = 0;
+  all.forEach(function(r){
+    counts[verdictOf(r).key]++;
+    if((r.origin || 'single') === 'single') singleN++;
+  });
+  const batchN = all.length - singleN;
+
+  $('recKpis').innerHTML = [
+    { k:'审核总条数', v:String(all.length), d:'单条 ' + singleN + ' · 批量 ' + batchN + '（上限 ' + HIST_MAX + ' 条）' },
+    { k:'自动通过', v:String(counts['auto-pass']), d:'判为不违规且未触发拒判', color:'var(--accent)' },
+    { k:'自动拦截', v:String(counts['auto-block']), d:'判为违规且未触发拒判', color:'var(--danger)' },
+    { k:'转人工复核', v:String(counts['review']), d:'置信度低于阈值 ' + (state.threshold * 100).toFixed(1) + '%', color:'var(--warn)' }
+  ].map(function(it){
+    return '<div class="card kpi"><span class="kpi-k">' + esc(it.k) + '</span>' +
+      '<span class="kpi-v"' + (it.color ? ' style="color:' + it.color + '"' : '') + '>' + esc(it.v) + '</span>' +
+      '<span class="kpi-d">' + esc(it.d) + '</span></div>';
+  }).join('');
+
+  /* 路线下拉选项按实际出现过的路线生成 */
+  const sel = $('recRoute');
+  if(sel){
+    const used = {};
+    all.forEach(function(r){ used[r.routeKey] = true; });
+    sel.innerHTML = '<option value="all">全部路线</option>' + Object.keys(ROUTES).map(function(k){
+      return '<option value="' + k + '"' + (used[k] ? '' : ' disabled') + '>' + esc(ROUTES[k].label) + (used[k] ? '' : '（暂无记录）') + '</option>';
+    }).join('');
+    sel.value = state.recRoute;
+  }
+
+  const rows = filteredRecords();
+  if(!rows.length){
+    host.innerHTML = '<tr><td colspan="8"><p class="empty">' +
+      (all.length ? '当前筛选条件下没有记录' : '暂无审核记录 —— 去「审核工作台」或「批量审核」跑一条试试') + '</p></td></tr>';
+    return;
+  }
+  host.innerHTML = rows.map(function(r, i){
+    const v = verdictOf(r);
+    const vTag = { 'auto-pass':'tag-ok', 'auto-block':'tag-bad', 'review':'tag-warn' }[v.key];
+    const time = new Date(r.at);
+    const timeStr = time.toLocaleDateString('zh-CN') + ' ' + time.toLocaleTimeString('zh-CN');
+    const conf = r.confidenceKnown ? (r.confidence * 100).toFixed(1) + '%' : '<span class="dim">—</span>';
+    const src = r.source === 'api' ? '<span class="tag tag-info">真实接口</span>' : '<span class="tag tag-warn">内置规则</span>';
+    const short = r.text.length > 42 ? r.text.slice(0, 42) + '…' : r.text;
+    return '<tr data-rec="' + state.history.indexOf(r) + '" style="cursor:pointer">' +
+      '<td class="mono" style="font-size:11.5px;color:var(--text-tertiary)">' + esc(timeStr) + '</td>' +
+      '<td class="dim">' + esc(ROUTES[r.routeKey] ? ROUTES[r.routeKey].short : r.routeKey) + '</td>' +
+      '<td>' + ((r.origin === 'batch')
+        ? '<span class="tag tag-info">批量</span>' + (r.batchLabel ? '<div class="dim" style="font-size:10.5px;margin-top:2px">' + esc(r.batchLabel) + '</div>' : '')
+        : '<span class="tag tag-neutral">单条</span>') + '</td>' +
+      '<td title="' + esc(r.text) + '">' + esc(short) + '</td>' +
+      '<td><span class="tag tag-neutral" style="color:' + classColor(r.className) + '"><i class="dot"></i>' + esc(r.className) + '</span></td>' +
+      '<td class="num">' + conf + '</td>' +
+      '<td><span class="tag ' + vTag + '">' + v.text + '</span></td>' +
+      '<td>' + src + '</td>' +
+    '</tr>';
+  }).join('');
+
+  Array.prototype.forEach.call(host.querySelectorAll('[data-rec]'), function(tr){
+    tr.addEventListener('click', function(){
+      const r = state.history[Number(tr.getAttribute('data-rec'))];
+      if(!r) return;
+      $('reviewText').value = r.text;
+      updateCharCount();
+      lastResult = r;
+      switchView('review');
+      renderResult(r);
+      toast('<b>已回填该条文案</b>');
+    });
+  });
+}
+
+/* ============================================================
+   8. 审核工作台交互
+   ============================================================ */
+function updateCharCount(){ $('charCount').textContent = String($('reviewText').value.length); }
+
+function renderSamples(){
+  $('sampleChips').innerHTML = '<span class="dim" style="font-size:11.5px;align-self:center">示例：</span>' +
+    SAMPLES.map(function(s, i){
+      return '<button class="chip" data-sample="' + i + '" style="color:' + classColor(s.name) + '">' + esc(s.name) + '</button>';
+    }).join('');
+  Array.prototype.forEach.call($('sampleChips').querySelectorAll('[data-sample]'), function(btn){
+    btn.addEventListener('click', function(){
+      const s = SAMPLES[Number(btn.getAttribute('data-sample'))];
+      $('reviewText').value = s.text;
+      updateCharCount();
+      $('reviewText').focus();
+    });
+  });
+}
+
+/* 最近一次审核结果：拖动阈值滑块时要用它按新阈值重算处置结论 */
+let lastResult = null;
+
+function doReview(){
+  const text = $('reviewText').value.trim();
+  if(!text){ toast('<b>请先输入文案</b>', 'warn'); $('reviewText').focus(); return; }
+  const route = ROUTES[state.routeKey];
+  const btn = $('submitReview');
+  btn.disabled = true;
+  btn.textContent = '审核中…';
+  reviewOne(text, route).then(function(result){
+    lastResult = result;
+    renderResult(result);
+    pushHistory(result, 'single');
+    if(result.source === 'offline' && !state.forceOffline && route.availability !== 'blocked'){
+      toast('<b>已回退到离线兜底</b><br>接口未响应或跨域被拦截，结论由内置规则生成。');
+    }
+  }).catch(function(err){
+    toast('<b>审核失败</b><br>' + esc(err && err.message ? err.message : '未知错误'), 'bad');
+  }).then(function(){
+    btn.disabled = false;
+    btn.textContent = '开始审核';
+  });
+}
+
+/* ============================================================
+   9. 批量审核
+   ============================================================ */
+/* 解析批量输入：一行一条，支持「文案⇥标签」两列。
+   标签先看行内，其次回退到上传文件带来的标签（state.uploadLabels，按原始行号对齐）。 */
+function isLabelLike(s){
+  if(/^[0-5]$/.test(s)) return true;
+  return !!classByName(s);
+}
+function normalizeLabel(s){
+  if(/^[0-5]$/.test(s)) return CLASSES[Number(s)].name;
+  return s;
+}
+function parseBatchRows(text){
+  const lines = String(text).split(/\r?\n/);
+  const rows = [];
+  lines.forEach(function(line, idx){
+    const parts = line.split('\t');
+    const t = (parts[0] || '').trim();
+    if(!t) return;
+    let label = parts.length > 1 ? (parts[parts.length - 1] || '').trim() : '';
+    if(label && !isLabelLike(label)) label = '';
+    if(!label && state.uploadLabels && typeof state.uploadLabels[idx] === 'string') label = state.uploadLabels[idx];
+    rows.push({ text:t, label:label ? normalizeLabel(label) : '' });
+  });
+  return rows;
+}
+function parseBatch(text){ return parseBatchRows(text).map(function(r){ return r.text; }); }
+
+function updateBatchCount(){ $('batchCount').textContent = String(parseBatch($('batchText').value).length); }
+
+function runBatch(){
+  const parsed = parseBatchRows($('batchText').value);
+  if(!parsed.length){ toast('<b>没有可审核的文案</b>', 'warn'); return; }
+  const texts = parsed.map(function(r){ return r.text; });
+  const route = ROUTES[state.routeKey];
+  const btn = $('batchRun');
+  const bar = $('batchProgress');
+  btn.disabled = true;
+  btn.textContent = '审核中…';
+  bar.hidden = false;
+  state.batchRows = [];
+
+  let done = 0;
+  const total = texts.length;
+  const results = new Array(total);
+  const CONCURRENCY = route.availability === 'blocked' || state.forceOffline ? 8 : 2;
+
+  function tick(){
+    done++;
+    bar.querySelector('i').style.width = ((done / total) * 100).toFixed(1) + '%';
+  }
+
+  function worker(){
+    const idx = results.nextIndex++;
+    if(idx >= total) return Promise.resolve();
+    return reviewOne(texts[idx], route).then(function(r){
+      results[idx] = r;
+      tick();
+      return worker();
+    });
+  }
+  results.nextIndex = 0;
+
+  const workers = [];
+  for(let i = 0; i < Math.min(CONCURRENCY, total); i++){ workers.push(worker()); }
+
+  Promise.all(workers).then(function(){
+    state.batchRows = results.filter(Boolean).map(function(r, i){
+      const label = parsed[i] ? parsed[i].label : '';
+      const hit = label ? (label === r.className) : null;
+      return {
+        index:i + 1, text:r.text, className:r.className, rawClass:r.rawClass,
+        confidence:r.confidence, confidenceKnown:r.confidenceKnown,
+        verdict:verdictOf(r).key, source:r.source, isReview:r.isReview,
+        label:label, labelHit:hit
+      };
+    });
+    renderBatchTable();
+    renderBatchSummary();
+    /* 整批写入审核记录（带批次名，便于在记录页区分是哪一次批量） */
+    pushHistoryBatch(results, state.uploadName || '粘贴文本');
+    $('batchExport').disabled = state.batchRows.length === 0;
+    const labeled = state.batchRows.filter(function(r){ return !!r.label; }).length;
+    toast('<b>批量审核完成</b><br>共 ' + total + ' 条' + (labeled ? '，其中 ' + labeled + ' 条带标签可算一致率' : '') + '；已写入审核记录');
+  }).catch(function(err){
+    toast('<b>批量审核中断</b><br>' + esc(err && err.message ? err.message : '未知错误'), 'bad');
+  }).then(function(){
+    btn.disabled = false;
+    btn.textContent = '开始批量审核';
+    bar.hidden = true;
+    bar.querySelector('i').style.width = '0%';
+  });
+}
+
+function filteredBatchRows(){
+  let rows = state.batchRows.slice();
+  if(state.batchFilter !== 'all'){
+    rows = rows.filter(function(r){ return r.verdict === state.batchFilter; });
+  }
+  if(state.batchSort === 'conf-desc'){
+    rows.sort(function(a, b){ return (b.confidenceKnown ? b.confidence : -1) - (a.confidenceKnown ? a.confidence : -1); });
+  }else if(state.batchSort === 'conf-asc'){
+    rows.sort(function(a, b){ return (a.confidenceKnown ? a.confidence : 2) - (b.confidenceKnown ? b.confidence : 2); });
+  }
+  return rows;
+}
+
+function renderBatchTable(){
+  const rows = filteredBatchRows();
+  const body = $('batchBody');
+  if(!rows.length){
+    body.innerHTML = '<tr><td colspan="6"><p class="empty">暂无数据</p></td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map(function(r){
+    const v = { 'auto-pass':'tag-ok', 'auto-block':'tag-bad', 'review':'tag-warn' }[r.verdict];
+    const vt = { 'auto-pass':'自动通过', 'auto-block':'自动拦截', 'review':'转人工复核' }[r.verdict];
+    const conf = r.confidenceKnown ? (r.confidence * 100).toFixed(1) + '%' : '—';
+    const srcTag = r.source === 'offline' ? ' <span class="dim" style="font-size:10.5px">规则</span>' : '';
+    const labelCell = r.label
+      ? '<span style="color:' + (r.labelHit ? 'var(--accent)' : 'var(--warn)') + '">' + esc(r.label) + (r.labelHit ? ' ✓' : ' ✗') + '</span>'
+      : '<span class="dim">—</span>';
+    return '<tr>' +
+      '<td class="num">' + r.index + '</td>' +
+      '<td>' + esc(r.text.length > 42 ? r.text.slice(0, 42) + '…' : r.text) + srcTag + '</td>' +
+      '<td><span class="tag tag-neutral" style="color:' + classColor(r.className) + '"><i class="dot"></i>' + esc(r.className) + '</span></td>' +
+      '<td class="num">' + conf + '</td>' +
+      '<td><span class="tag ' + v + '">' + vt + '</span></td>' +
+      '<td>' + labelCell + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function renderBatchSummary(){
+  if(!state.batchRows.length){
+    $('batchSummary').innerHTML = '<p class="empty">运行后显示分流统计</p>';
+    return;
+  }
+  const rows = state.batchRows;
+  const total = rows.length;
+  const counts = { 'auto-pass':0, 'auto-block':0, 'review':0 };
+  const byClass = {};
+  rows.forEach(function(r){
+    counts[r.verdict]++;
+    byClass[r.className] = (byClass[r.className] || 0) + 1;
+  });
+  const autoPct = ((counts['auto-pass'] + counts['auto-block']) / total) * 100;
+  const classBars = Object.keys(byClass).sort(function(a, b){ return byClass[b] - byClass[a]; }).map(function(name){
+    return barRow(name, byClass[name], total, classColor(name), ' 条');
+  }).join('');
+
+  /* 上传文件带标签时，顺便给出与标签的一致率 */
+  const labeled = rows.filter(function(r){ return !!r.label; });
+  const hit = labeled.filter(function(r){ return r.labelHit; }).length;
+  const agreeBlock = labeled.length
+    ? '<div class="grid cols-3" style="gap:var(--space-3);margin-top:var(--space-4)">' +
+        '<div class="kpi"><span class="kpi-k">带标签条数</span><span class="kpi-v">' + labeled.length + '</span></div>' +
+        '<div class="kpi"><span class="kpi-k">与标签一致</span><span class="kpi-v" style="color:var(--accent)">' + hit + '</span></div>' +
+        '<div class="kpi"><span class="kpi-k">一致率</span><span class="kpi-v" style="color:var(--accent-2)">' + ((hit / labeled.length) * 100).toFixed(1) + '<small>%</small></span></div>' +
+      '</div>' +
+      '<p class="hint" style="margin-top:8px">一致率 = 预测类别与文件里标签相同的比例，只在有标签的行上计算（<b>不一定</b>等于测试集准确率，除非文件本身就是测试集）。</p>'
+    : '';
+
+  $('batchSummary').innerHTML =
+    '<div class="grid cols-3" style="gap:var(--space-3);margin-bottom:var(--space-4)">' +
+      '<div class="kpi"><span class="kpi-k">自动通过</span><span class="kpi-v" style="color:var(--accent)">' + counts['auto-pass'] + '</span></div>' +
+      '<div class="kpi"><span class="kpi-k">自动拦截</span><span class="kpi-v" style="color:var(--danger)">' + counts['auto-block'] + '</span></div>' +
+      '<div class="kpi"><span class="kpi-k">转人工</span><span class="kpi-v" style="color:var(--warn)">' + counts['review'] + '</span></div>' +
+    '</div>' +
+    '<div class="bars">' +
+      barRow('自动处理占比', autoPct, 100, 'var(--accent-2)', '%') +
+    '</div>' +
+    agreeBlock +
+    '<div class="bars" style="margin-top:var(--space-4)">' + classBars + '</div>' +
+    '<p class="hint" style="margin-top:12px">共 ' + total + ' 条 · 阈值 ' + (state.threshold * 100).toFixed(1) + '% · ' +
+      (state.forceOffline || ROUTES[state.routeKey].availability === 'blocked' ? '内置规则' : '真实接口') + '</p>';
+}
+
+/* 通用 CSV 下载（带 BOM，Excel 直接打开） */
+function downloadCsv(lines, filename){
+  const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type:'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+}
+function csvCell(v){ return '"' + String(v === null || v === undefined ? '' : v).replace(/"/g, '""') + '"'; }
+function stamp(){ return new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-'); }
+
+function exportCsv(){
+  const rows = filteredBatchRows();
+  if(!rows.length){ toast('<b>没有可导出的行</b>', 'warn'); return; }
+  const verdictText = { 'auto-pass':'自动通过', 'auto-block':'自动拦截', 'review':'转人工复核' };
+  const lines = [['序号','文案','判定类别','模型原判','置信度','处置','原标签','与标签一致','结果来源'].join(',')];
+  rows.forEach(function(r){
+    lines.push([
+      r.index, csvCell(r.text), csvCell(r.className), csvCell(r.rawClass || ''),
+      r.confidenceKnown ? (r.confidence * 100).toFixed(1) + '%' : '',
+      verdictText[r.verdict], csvCell(r.label || ''),
+      r.label ? (r.labelHit ? '一致' : '不一致') : '',
+      r.source === 'api' ? '真实接口' : '内置规则'
+    ].join(','));
+  });
+  downloadCsv(lines, '批量审核结果_' + stamp() + '.csv');
+  toast('<b>已导出 ' + rows.length + ' 条</b><br>CSV 带 BOM，Excel 可直接打开');
+}
+
+function exportRecords(){
+  const rows = filteredRecords();
+  if(!rows.length){ toast('<b>没有可导出的记录</b>', 'warn'); return; }
+  const lines = [['时间','模型路线','文案','判定类别','模型原判','置信度','处置','结果来源','耗时(ms)'].join(',')];
+  rows.forEach(function(r){
+    const v = verdictOf(r);
+    const d = new Date(r.at);
+    lines.push([
+      csvCell(d.toLocaleDateString('zh-CN') + ' ' + d.toLocaleTimeString('zh-CN')),
+      csvCell(ROUTES[r.routeKey] ? ROUTES[r.routeKey].label : r.routeKey),
+      csvCell(r.text), csvCell(r.className), csvCell(r.rawClass || ''),
+      r.confidenceKnown ? (r.confidence * 100).toFixed(1) + '%' : '',
+      v.text, r.source === 'api' ? '真实接口' : '内置规则',
+      (typeof r.latencyMs === 'number') ? r.latencyMs.toFixed(2) : ''
+    ].join(','));
+  });
+  downloadCsv(lines, '审核记录_' + stamp() + '.csv');
+  toast('<b>已导出 ' + rows.length + ' 条记录</b>');
+}
+
+/* ============================================================
+   9.5 批量审核：上传文件读取
+   ============================================================ */
+const UPLOAD_MAX = 2000;
+
+/* 读文本：先严格按 UTF-8 解码，失败再退回 GBK（中文文件在 Windows 上很常见） */
+function readFileAsText(file){
+  return new Promise(function(resolve, reject){
+    const reader = new FileReader();
+    reader.onerror = function(){ reject(new Error('读取文件失败')); };
+    reader.onload = function(){
+      const buf = reader.result;
+      let text = null, enc = 'UTF-8';
+      try{
+        text = new TextDecoder('utf-8', { fatal:true }).decode(buf);
+      }catch(e){
+        try{
+          text = new TextDecoder('gbk').decode(buf);
+          enc = 'GBK';
+        }catch(e2){
+          text = new TextDecoder('utf-8').decode(buf);
+          enc = 'UTF-8（宽松）';
+        }
+      }
+      resolve({ text:String(text).replace(/^\uFEFF/, ''), encoding:enc });
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+/* 解析上传内容 → [{text, label}]；支持 .json 数组 与 逐行文本（tab/逗号/分号分隔） */
+function parseUploaded(text, filename){
+  const lower = String(filename || '').toLowerCase();
+  if(lower.endsWith('.json')){
+    const data = JSON.parse(text);
+    const arr = Array.isArray(data) ? data : (data && Array.isArray(data.data) ? data.data : []);
+    const rows = [];
+    arr.forEach(function(item){
+      if(typeof item === 'string'){ if(item.trim()) rows.push({ text:item.trim(), label:'' }); return; }
+      if(!item || typeof item !== 'object') return;
+      const t = item.text || item['文本'] || item.content || item['文案'] || item.sentence || '';
+      if(!String(t).trim()) return;
+      let lab = item.label !== undefined ? item.label : (item['标签'] !== undefined ? item['标签'] : '');
+      lab = String(lab).trim();
+      rows.push({ text:String(t).trim(), label:isLabelLike(lab) ? normalizeLabel(lab) : '' });
+    });
+    return { rows:rows, kind:'JSON 数组' };
+  }
+  const rows = [];
+  String(text).split(/\r?\n/).forEach(function(line, idx){
+    const l = line.trim();
+    if(!l) return;
+    /* 跳过表头（第一行且是 text/文案/内容 之类的列名） */
+    if(idx === 0 && /^(text|文案|内容|content|sentence)$/i.test(l)) return;
+    let body = l, label = '';
+    const m = l.match(/^(.*?)[\t,;]([^\t,;]+)$/);
+    if(m){
+      const last = m[2].trim().replace(/^"|"$/g, '');
+      if(isLabelLike(last)){ body = m[1].trim().replace(/^"|"$/g, ''); label = normalizeLabel(last); }
+    }
+    if(!body) return;
+    rows.push({ text:body, label:label });
+  });
+  return { rows:rows, kind:'逐行文本' };
+}
+
+function applyUploadedFile(file){
+  if(!file) return;
+  readFileAsText(file).then(function(res){
+    let parsed;
+    try{
+      parsed = parseUploaded(res.text, file.name);
+    }catch(e){
+      toast('<b>文件解析失败</b><br>' + esc(e && e.message ? e.message : '格式无法识别'), 'bad');
+      return;
+    }
+    if(!parsed.rows.length){ toast('<b>文件里没有解析到文案</b>', 'warn'); return; }
+
+    let rows = parsed.rows;
+    let truncated = false;
+    if(rows.length > UPLOAD_MAX){ rows = rows.slice(0, UPLOAD_MAX); truncated = true; }
+
+    $('batchText').value = rows.map(function(r){ return r.text; }).join('\n');
+    state.uploadLabels = rows.map(function(r){ return r.label || ''; });
+    state.uploadName = file.name;
+    updateBatchCount();
+
+    const withLabel = rows.filter(function(r){ return r.label; }).length;
+    $('batchFileInfo').innerHTML =
+      '<span class="file-chip">' + esc(file.name) + '</span> ' +
+      '解析 <b class="mono">' + rows.length + '</b> 条 · 编码 ' + esc(res.encoding) + ' · 格式 ' + esc(parsed.kind) +
+      (withLabel ? ' · <b style="color:var(--accent)">' + withLabel + ' 条带标签</b>（可算一致率）' : ' · 未检测到标签列') +
+      (truncated ? ' · <b style="color:var(--warn)">文件过长，只取了前 ' + UPLOAD_MAX + ' 条</b>' : '');
+    toast('<b>已读取 ' + esc(file.name) + '</b><br>' + rows.length + ' 条文案' + (withLabel ? '，' + withLabel + ' 条带标签' : ''));
+  }).catch(function(err){
+    toast('<b>读取文件失败</b><br>' + esc(err && err.message ? err.message : '未知错误'), 'bad');
+  });
+}
+
+/* ============================================================
+   10. 静态页面渲染（指标 / 对比 / 接口）
+   ============================================================ */
+function renderKpis(){
+  const items = [
+    { k:'accuracy', v:'0.9310', d:'实验报告口径（README 误作 0.9331）' },
+    { k:'macro-F1', v:'0.9343', d:'README 的 0.934 实为 dev val_f1' },
+    { k:'欺诈召回', v:'0.94', d:'无加权基线 0.77（+17 个点）' },
+    { k:'自动判定占比', v:'96.0', unit:'%', d:'阈值 0.60，准确率 94.88%' }
+  ];
+  $('kpiGrid').innerHTML = items.map(function(it){
+    return '<div class="card kpi">' +
+      '<span class="kpi-k">' + esc(it.k) + '</span>' +
+      '<span class="kpi-v">' + esc(it.v) + (it.unit ? '<small>' + it.unit + '</small>' : '') + '</span>' +
+      '<span class="kpi-d">' + esc(it.d) + '</span>' +
+    '</div>';
+  }).join('');
+}
+
+function renderClassDist(){
+  $('classDist').innerHTML = CLASS_DIST.map(function(c){
+    return barRow(c.name, c.pct, 21, classColor(c.name), '%') +
+      '<span class="hint" style="margin-top:-6px;margin-left:98px">' + c.n + ' 条</span>';
+  }).join('');
+}
+
+function renderWeightTable(){
+  $('weightTable').innerHTML = WEIGHT_ROWS.map(function(r){
+    const color = r.good === true ? 'var(--accent)' : (r.good === false ? 'var(--warn)' : 'var(--text-secondary)');
+    return '<tr>' +
+      '<td><span class="tag tag-neutral" style="color:' + classColor(r.name) + '"><i class="dot"></i>' + esc(r.name) + '</span></td>' +
+      '<td class="num">' + r.base.toFixed(3) + '</td>' +
+      '<td class="num" style="color:' + color + '">' + r.weighted.toFixed(3) + '</td>' +
+      '<td class="num">' + r.recall.toFixed(2) + '</td>' +
+      '<td class="dim">' + esc(r.note) + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function renderConfusion(){
+  $('confusionBody').innerHTML = CONFUSION.map(function(row, ri){
+    const cells = row.cells.map(function(v, i){
+      const cls = i === ri ? 'hit' : (v > 0 ? 'miss' : 'zero');
+      return '<td class="cell ' + cls + '">' + v + '</td>';
+    }).join('');
+    return '<tr><td class="rowh">' + esc(row.truth) + '</td>' + cells + '</tr>';
+  }).join('');
+}
+
+function renderThresholdTable(){
+  $('thresholdTable').innerHTML = THRESHOLD_POINTS.map(function(p){
+    const isCurrent = Math.abs(p.t - state.threshold) < 1e-9;
+    const strong = isCurrent ? ' style="font-weight:600;color:var(--accent)"' : '';
+    return '<tr>' +
+      '<td class="num"' + strong + '>' + p.t.toFixed(2) + '</td>' +
+      '<td class="num">' + p.auto.toFixed(1) + '%</td>' +
+      '<td class="num">' + p.acc.toFixed(2) + '%</td>' +
+      '<td class="num">' + p.recall.toFixed(1) + '%</td>' +
+      '<td class="dim">' + esc(p.note) + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function renderSchemes(){
+  $('schemeTable').innerHTML = SCHEMES.map(function(s){
+    return '<tr>' +
+      '<td' + (s.strong ? ' style="color:var(--accent);font-weight:600"' : '') + '>' + esc(s.name) + '</td>' +
+      '<td class="dim">' + esc(s.cfg) + '</td>' +
+      '<td class="num">' + s.acc + '</td>' +
+      '<td class="num">' + s.f1 + '</td>' +
+      '<td class="num">' + s.lat + '</td>' +
+      '<td class="dim">' + esc(s.note) + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function renderCompression(){
+  const maxSize = 390.2;
+  $('sizeBars').innerHTML = COMPRESSION.map(function(c){
+    return barRow(c.name, c.size, maxSize, 'var(--accent-2)', ' MB');
+  }).join('');
+  $('f1Bars').innerHTML = COMPRESSION.map(function(c){
+    const w = (c.f1 / 0.94) * 100;
+    const color = c.f1 >= 0.93 ? 'var(--accent)' : (c.f1 >= 0.92 ? 'var(--accent-2)' : 'var(--warn)');
+    return '<div class="bar-row">' +
+      '<span class="muted">' + esc(c.name) + '</span>' +
+      '<div class="bar-track"><div class="bar-fill" style="width:' + w.toFixed(1) + '%;background:' + color + '"></div></div>' +
+      '<span class="bar-val">' + c.f1.toFixed(4) + '</span>' +
+    '</div>';
+  }).join('');
+}
+
+function renderApiCards(){
+  const availTag = { ready:'tag-ok', env:'tag-info', blocked:'tag-warn' };
+  $('apiCards').innerHTML = Object.keys(ROUTES).map(function(k){
+    const r = ROUTES[k];
+    const req = '{\n  "text": "加我微信，日赚500，操作简单，秒到账"\n}';
+    let res;
+    if(r.key === 'bert'){
+      res = '{\n  "text": "…",\n  "pred_class": "欺诈",          // 或 "需人工复核"\n  "raw_class": "欺诈",          // argmax 原判\n  "confidence": 0.9432,         // float，非百分比\n  "need_review": false,\n  "probs": [0.0012, 0.0031, 0.9432, 0.0022, 0.0041, 0.0462]  // 六类，顺序同 class.txt\n}';
+    }else{
+      res = '{\n  "text": "…",\n  "pred_class": "黑产广告"' + (r.key === 'llm' ? '   // 也可能为 "需人工复核"' : '') + '\n}';
+    }
+    return '<div class="card">' +
+      '<div class="card-head">' +
+        '<h3>' + esc(r.label) + '</h3>' +
+        '<div class="spacer"></div>' +
+        '<span class="tag ' + availTag[r.availability] + '">' + esc(r.availabilityText) + '</span>' +
+      '</div>' +
+      '<div class="meta-row" style="margin-top:0;padding-top:0;border-top:none;margin-bottom:var(--space-4)">' +
+        '<span>方法 <b class="mono">POST /predict</b></span>' +
+        '<span>默认端口 <b class="mono">' + r.port + '</b></span>' +
+        '<span>文件 <b>' + esc(r.file) + '</b></span>' +
+      '</div>' +
+      '<div class="code-head"><span class="p">请求</span><div class="spacer"></div>' +
+        '<button class="btn btn-ghost btn-xs" data-copy="' + esc(req) + '">复制</button></div>' +
+      '<pre>' + esc(req) + '</pre>' +
+      '<div class="code-head" style="margin-top:var(--space-4)"><span class="p">响应</span><div class="spacer"></div>' +
+        '<button class="btn btn-ghost btn-xs" data-copy="' + esc(res) + '">复制</button></div>' +
+      '<pre>' + esc(res) + '</pre>' +
+      '<div class="note ' + (r.availability === 'blocked' ? 'warn' : '') + '" style="margin-top:var(--space-4)">' + esc(r.note) + '</div>' +
+    '</div>';
+  }).join('');
+
+  Array.prototype.forEach.call($('apiCards').querySelectorAll('[data-copy]'), function(btn){
+    btn.addEventListener('click', function(){
+      copyText(btn.getAttribute('data-copy'));
+    });
+  });
+}
+
+function copyText(text){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){
+      toast('<b>已复制到剪贴板</b>');
+    }).catch(function(){
+      fallbackCopy(text);
+    });
+  }else{
+    fallbackCopy(text);
+  }
+}
+function fallbackCopy(text){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand('copy'); toast('<b>已复制到剪贴板</b>'); }
+  catch(e){ toast('<b>复制失败</b><br>请手动选择文本', 'warn'); }
+  ta.remove();
+}
+
+function renderThresholdAll(){
+  $('thresholdLabel').textContent = (state.threshold * 100).toFixed(1) + '%';
+  $('thresholdRange').value = String(Math.round(state.threshold * 100));
+  $('thresholdTag').textContent = '阈值 ' + (state.threshold * 100).toFixed(1) + '%';
+  renderThresholdPanel();
+  renderThresholdTable();
+}
+
+/* ============================================================
+   11. 事件绑定与初始化
+   ============================================================ */
+function switchView(key){
+  Array.prototype.forEach.call(document.querySelectorAll('.nav-item'), function(btn){
+    btn.setAttribute('aria-current', btn.getAttribute('data-view') === key ? 'page' : 'false');
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.view'), function(v){
+    v.classList.toggle('is-active', v.id === 'view-' + key);
+  });
+}
+
+function bindEvents(){
+  Array.prototype.forEach.call(document.querySelectorAll('.nav-item'), function(btn){
+    btn.addEventListener('click', function(){ switchView(btn.getAttribute('data-view')); });
+  });
+
+  $('routeSelect').addEventListener('change', function(e){
+    state.routeKey = e.target.value;
+    saveState();
+    renderRouteTag();
+    refreshRouteHealth(ROUTES[state.routeKey], true);
+  });
+
+  $('thresholdRange').addEventListener('input', function(e){
+    state.threshold = Number(e.target.value) / 100;
+    saveState();
+    renderThresholdAll();
+    /* 阈值变了 → 已显示的结论与历史记录要立刻按新阈值重算
+       （这就是「拖动滑块看结论翻转」的演示点） */
+    if(lastResult){ renderResult(lastResult); renderHistory(); }
+    renderRecords();          /* 记录页的处置列同样按新阈值重算 */
+  });
+
+  $('reviewText').addEventListener('input', updateCharCount);
+  $('submitReview').addEventListener('click', doReview);
+  $('clearInput').addEventListener('click', function(){
+    $('reviewText').value = '';
+    updateCharCount();
+    $('reviewText').focus();
+  });
+  $('reviewText').addEventListener('keydown', function(e){
+    if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ doReview(); }
+  });
+
+  $('clearHistory').addEventListener('click', function(){
+    state.history = [];
+    renderHistory();
+  });
+
+  $('batchText').addEventListener('input', function(){
+    updateBatchCount();
+    /* 手动改过内容后，上传带来的标签行号就未必对得上了，清掉以免算出错误的一致率 */
+    if(state.uploadLabels){
+      state.uploadLabels = null;
+      state.uploadName = '';
+      $('batchFileInfo').innerHTML = '<span class="dim">内容已被手动编辑，标签对应关系已清除（不再计算一致率）</span>';
+    }
+  });
+  $('batchRun').addEventListener('click', runBatch);
+  $('batchExport').addEventListener('click', exportCsv);
+  $('batchClear').addEventListener('click', function(){
+    $('batchText').value = '';
+    state.uploadLabels = null;
+    state.uploadName = '';
+    $('batchFileInfo').innerHTML = '';
+    updateBatchCount();
+    state.batchRows = [];
+    renderBatchTable();
+    renderBatchSummary();
+    $('batchExport').disabled = true;
+  });
+
+  /* 批量审核：上传文件 / 拖放读取 */
+  $('batchFileBtn').addEventListener('click', function(){ $('batchFile').click(); });
+  $('batchFile').addEventListener('change', function(e){
+    const f = e.target.files && e.target.files[0];
+    applyUploadedFile(f);
+    e.target.value = '';            /* 允许重复选同一个文件 */
+  });
+  const drop = $('batchDrop');
+  ['dragenter', 'dragover'].forEach(function(ev){
+    drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add('is-over'); });
+  });
+  ['dragleave', 'drop'].forEach(function(ev){
+    drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove('is-over'); });
+  });
+  drop.addEventListener('drop', function(e){
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    applyUploadedFile(f);
+  });
+
+  /* 审核记录页：筛选 / 导出 / 清空 */
+  Array.prototype.forEach.call($('recFilter').querySelectorAll('button'), function(btn){
+    btn.addEventListener('click', function(){
+      state.recFilter = btn.getAttribute('data-filter');
+      Array.prototype.forEach.call($('recFilter').querySelectorAll('button'), function(b){
+        b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+      });
+      renderRecords();
+    });
+  });
+  $('recRoute').addEventListener('change', function(e){ state.recRoute = e.target.value; renderRecords(); });
+  $('recOrigin').addEventListener('change', function(e){ state.recOrigin = e.target.value; renderRecords(); });
+  $('recSource').addEventListener('change', function(e){ state.recSource = e.target.value; renderRecords(); });
+  $('recExport').addEventListener('click', exportRecords);
+  $('recClear').addEventListener('click', function(){
+    if(!state.history.length){ toast('<b>没有记录可清空</b>', 'warn'); return; }
+    const n = state.history.length;
+    state.history = [];
+    saveHistory();
+    renderHistory();
+    renderRecords();
+    toast('<b>已清空 ' + n + ' 条审核记录</b>');
+  });
+  $('batchFill').addEventListener('click', function(){
+    $('batchText').value = SAMPLES.map(function(s){ return s.text; }).join('\n');
+    updateBatchCount();
+  });
+
+  Array.prototype.forEach.call($('batchFilter').querySelectorAll('button'), function(btn){
+    btn.addEventListener('click', function(){
+      state.batchFilter = btn.getAttribute('data-filter');
+      Array.prototype.forEach.call($('batchFilter').querySelectorAll('button'), function(b){
+        b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+      });
+      renderBatchTable();
+    });
+  });
+  $('batchSort').addEventListener('change', function(e){
+    state.batchSort = e.target.value;
+    renderBatchTable();
+  });
+
+  /* 设置浮层 */
+  const pop = $('settingsPop');
+  $('settingsBtn').addEventListener('click', function(){
+    const open = pop.hidden;
+    pop.hidden = !open;
+    $('settingsBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+    if(open){
+      Object.keys(ROUTES).forEach(function(k){ $('base-' + k).value = state.bases[k]; });
+      $('forceOffline').checked = state.forceOffline;
+    }
+  });
+  $('settingsClose').addEventListener('click', function(){
+    pop.hidden = true;
+    $('settingsBtn').setAttribute('aria-expanded', 'false');
+  });
+  $('settingsSave').addEventListener('click', function(){
+    Object.keys(ROUTES).forEach(function(k){
+      const v = $('base-' + k).value.trim();
+      state.bases[k] = v || ROUTES[k].defaultBase;
+    });
+    state.forceOffline = $('forceOffline').checked;
+    state.apiStatus = { bert:'unknown', rf:'unknown', fasttext:'unknown', llm:'unknown' };
+    saveState();
+    refreshRouteHealth(ROUTES[state.routeKey], false);
+    pop.hidden = true;
+    toast('<b>设置已保存</b>');
+  });
+  $('settingsReset').addEventListener('click', function(){
+    Object.keys(ROUTES).forEach(function(k){
+      state.bases[k] = ROUTES[k].defaultBase;
+      $('base-' + k).value = ROUTES[k].defaultBase;
+    });
+    state.forceOffline = false;
+    $('forceOffline').checked = false;
+    saveState();
+    renderApiBadge();
+    toast('<b>已恢复默认地址</b>');
+  });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && !pop.hidden){
+      pop.hidden = true;
+      $('settingsBtn').setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  /* 点击浮层外部关闭 */
+  document.addEventListener('click', function(e){
+    if(pop.hidden) return;
+    if(pop.contains(e.target) || e.target === $('settingsBtn')) return;
+    pop.hidden = true;
+    $('settingsBtn').setAttribute('aria-expanded', 'false');
+  });
+}
+
+function init(){
+  loadState();
+  renderRouteSelect();
+  renderRouteTag();
+  renderApiBadge();
+  renderSamples();
+  renderKpis();
+  renderClassDist();
+  renderWeightTable();
+  renderConfusion();
+  renderThresholdAll();
+  renderSchemes();
+  renderCompression();
+  renderApiCards();
+  renderHistory();
+  updateCharCount();
+  updateBatchCount();
+  renderBatchSummary();
+  renderApiBadge();
+  bindEvents();
+  loadHistory();
+  renderHistory();
+  renderRecords();
+
+  /* 先判定本页面是否由 Flask 服务托管（同源指纹），再检测当前路线的服务是否在跑 */
+  probeSameOrigin().then(function(ok){
+    sameOriginApi = ok;
+    return refreshRouteHealth(ROUTES[state.routeKey], false);
+  });
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', init);
+}else{
+  init();
+}
+</script>
+</body>
+</html>

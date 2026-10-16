@@ -146,7 +146,8 @@ DEEPSEEK_API_KEY=sk-xxxxxxxx
 | fastText 打不开中文路径 | C++ 层不支持窄字符路径 | config 里加 `FT_ASCII_DIR`，复制到 `%TEMP%` 下的 ASCII 目录运行 |
 | 量化时 device 撞车 | 数据送 GPU、模型在 CPU | 量化脚本与 `bert_train` 模块的 config 都强制 `cpu` |
 | 剪枝稀疏度不准 | `prune.global_unstructured` 的 amount 是相对「剩余未剪权重」，直接传累计值会复利到 72% | 改用 `bert_pruning.py` 中手写的 `global_l1_mask` |
-| 端口冲突 | RF / fastText / BERT 的 `api_port` 默认都是 6000 | 同时启动多个服务前手动改 port |
+| 端口冲突（已修复） | RF / fastText / BERT 的 `api_port` 原本都是 6000 | 现已改为 BERT **8000** / RF **8001** / fastText **8002**，三个服务可同时启动 |
+| 6000 端口被浏览器封禁 | 网页端调用 `127.0.0.1:6000` 一直失败，但 `curl` 测试正常 | 6000 在 Chromium（Chrome/Edge）受限端口名单里，浏览器报 `ERR_UNSAFE_PORT`；`curl` 不检查该名单。已改用 8000 等安全端口 |
 
 ## 七、局限说明
 
